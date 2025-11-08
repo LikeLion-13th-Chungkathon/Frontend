@@ -4,7 +4,7 @@ import type { Theme } from "../types/theme.types";
 
 const theme: Theme = {
   colors: {
-    bodyBg: "#f0f2f5",
+    bodyBg: "white",
     text: "black",
   },
   fonts: {
