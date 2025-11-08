@@ -3,9 +3,14 @@ export interface Theme {
     bodyBg: string;
     text: string;
     // 여기에 추가적인 색상들을 정의
+    background: string;
   };
   fonts: {
     primary: string;
     // 여기에 추가적인 폰트들을 정의
   };
+  layout: {
+    maxWidth: string;
+    padding: string;
+  }
 }
