@@ -6,6 +6,7 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
 
+ //네비게이션 데이터 (name, icon, path)
   const navItems = [
     { name: "홈", icon: <Home size={22} />, path: "/home" },
     { name: "태그", icon: <Tag size={22} />, path: "/tags" },
@@ -17,6 +18,7 @@ export default function BottomNav() {
 
   return (
     <NavContainer>
+      {/* 플로팅 버튼 왼쪽 부분 (홈, 태그 버튼) */}
       <NavGroup>
         {navItems.slice(0, 2).map((item) => (
           <NavButton
@@ -29,11 +31,13 @@ export default function BottomNav() {
           </NavButton>
         ))}
       </NavGroup>
-
+    
+      {/* 가운데 플로팅 버튼 (작성 버튼) */}
       <FloatingButton onClick={handleCreate}>
         <Pencil size={24} />
       </FloatingButton>
-
+    
+      {/* 플로팅 버튼 오른쪽 부분 (리뷰, 마이페이지 버튼) */}
       <NavGroup>
         {navItems.slice(2).map((item) => (
           <NavButton
