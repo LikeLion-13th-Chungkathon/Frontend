@@ -3,8 +3,10 @@ import GlobalStyle from "./styles/GlobalStyles";
 import theme from "./styles/theme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 import HomePage from "./pages/HomePage";
 import Layout from "./components/common/layout/layout";
+
 
 const queryClient = new QueryClient();
 
@@ -16,6 +18,7 @@ const App = () => {
         <ReactQueryDevtools initialIsOpen={false} />
         <Layout>
           <HomePage />
+
         </Layout>
       </ThemeProvider>
     </QueryClientProvider>

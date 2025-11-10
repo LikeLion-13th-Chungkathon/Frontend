@@ -1,5 +1,4 @@
 // 스타일 변수 저장소
-
 import type { Theme } from "../types/theme.types";
 
 const theme: Theme = {
@@ -18,5 +17,6 @@ const theme: Theme = {
     maxWidth: "375px", // 모바일 앱 폭
     padding: "16px",
   },
+
 };
 export default theme;
