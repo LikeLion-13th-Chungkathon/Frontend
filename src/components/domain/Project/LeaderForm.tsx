@@ -3,7 +3,6 @@ import styled from "styled-components";
 
 export default function LeaderForm({
     onSubmit,
-    onClose,
 }: {
     onSubmit?: (payload: {
         role: "leader";
@@ -35,7 +34,7 @@ export default function LeaderForm({
             endDate,
         });
 
-    onClose();
+    // 생성(제출)하면 초대코드 모달 화면으로!
 };
 
 return (
