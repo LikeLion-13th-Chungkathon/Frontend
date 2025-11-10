@@ -5,8 +5,8 @@ const theme: Theme = {
   colors: {
     bodyBg: "white",
     text: "black",
-    //추가한 부분
-    background: '#1b1b1b', //바깥 부분(페이지 배경)
+    background: "#1b1b1b", //바깥 부분(페이지 배경)
+    primary: "#007BFF",
   },
   fonts: {
     primary:
@@ -14,8 +14,9 @@ const theme: Theme = {
   },
   //기본 레이아웃
   layout: {
-    maxWidth: '375px', // 모바일 앱 폭
-    padding: '16px',
-  }
+    maxWidth: "375px", // 모바일 앱 폭
+    padding: "16px",
+  },
+
 };
 export default theme;

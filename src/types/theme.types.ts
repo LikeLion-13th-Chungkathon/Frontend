@@ -3,6 +3,7 @@ export interface Theme {
     bodyBg: string;
     text: string;
     // 여기에 추가적인 색상들을 정의
+    primary: string;
     background: string;
   };
   fonts: {
@@ -12,5 +13,5 @@ export interface Theme {
   layout: {
     maxWidth: string;
     padding: string;
-  }
+  };
 }
