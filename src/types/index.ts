@@ -10,6 +10,8 @@ export * from "./note.types";
 // event.types.ts 파일의 모든 타입을 가져와서 그대로 다시 내보내기
 export * from "./event.types";
 
+export * from "./review.types";
+
 // 이렇게 안 해도 되고
 // import { User } from '../types/user.types';
 // import { Post } from '../types/post.types';
