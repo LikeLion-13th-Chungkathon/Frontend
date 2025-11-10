@@ -3,18 +3,24 @@ import Modal from "../../common/Modal";
 import styled from "styled-components";
 import LeaderForm from "./LeaderForm";
 import MemberForm from "./MemberForm";
+import InviteCodeView from "./InviteCodeView";
 
 export default function CreateProjectModal({
     isOpen,
     onClose,
-    onSubmit,
+    // onSubmit,
 }: {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (payload: any) => void;
+    // onSubmit?: (payload: any) => void;
 }) {
     // 기본 역할 상태: 팀대표
     const [role, setRole] = useState<"leader" | "member">("leader")
+
+    // 초대 코드 단계 상태 추가
+    const [step, setStep] = useState<"select" | "invite">("select");
+    // 초대 코드 저장용
+    const [inviteCode, setInviteCode] = useState<string>("");
 
     return (
     // 공동 Modal 컴포넌트 사용해서 기본 틀 적용
@@ -22,34 +28,58 @@ export default function CreateProjectModal({
         
         <CloseButton onClick = {onClose}>x</CloseButton>
 
-        <Title>프로젝트를 생성하고 팀원을 초대해요!</Title>
+        
 
-        <ButtonContainer>
-            <Label>이번 프로젝트에서 나는?</Label>
-            <RoleButtons>
-                {/* 팀 대표 버튼 */}
-                <RoleButton
-                    $active={role === "leader"}
-                    onClick={() => setRole("leader")}
-                >
-                    팀 대표
-                </RoleButton>
-                {/* 팀원 버튼 */}
-                <RoleButton
-                    $active={role === "member"}
-                    onClick={() => setRole("member")}
-                >
-                    팀원
-                </RoleButton>
-            </RoleButtons>
+        {step === "select" && (
+            <ButtonContainer>
+                <Title>프로젝트를 생성하고 팀원을 초대해요!</Title>
+                <Label>이번 프로젝트에서 나는?</Label>
+                <RoleButtons>
+                    {/* 팀 대표 버튼 */}
+                    <RoleButton
+                        $active={role === "leader"}
+                        onClick={() => setRole("leader")}
+                    >
+                        팀 대표
+                    </RoleButton>
 
-            {/* 팀대표 or 팀원 역할에 따라 조건부 렌더링 */}
-            {role === "leader" ? (
-                <LeaderForm onSubmit={onSubmit} onClose={onClose} />
-            ) : (
-                <MemberForm onSubmit={onSubmit} onClose={onClose} />
-            )} 
-        </ButtonContainer>
+                    {/* 팀원 버튼 */}
+                    <RoleButton
+                        $active={role === "member"}
+                        onClick={() => setRole("member")}
+                    >
+                        팀원
+                    </RoleButton>
+                </RoleButtons>
+
+                {/* 팀대표 or 팀원 역할에 따라 조건부 렌더링 */}
+                {role === "leader" ? (
+                    <LeaderForm 
+                        onSubmit={() => {
+                            // TODO: 실제 API 연동해서 inviteCode 받아오면 여기 채우기
+                            const generatedCode = "LIKELION-LOG";
+                            setInviteCode(generatedCode);
+                            // invite 단계(초대코드 화면)로 전환
+                            setStep("invite");
+                        }}
+                        onClose={onClose} 
+                    />
+                ) : (
+                    <MemberForm 
+                        onSubmit={() => {
+                            // TODO: 초대코드 검증 API 등 처리 후 닫기
+                            onClose();
+                        }} 
+                        onClose={onClose} 
+                    />
+                )} 
+            </ButtonContainer>
+        )}
+
+        {step === "invite" && (
+            <InviteCodeView code={inviteCode} onClose={onClose} />
+        )}
+        
     </Modal>
     )
 }
@@ -61,7 +91,8 @@ const Title = styled.div`
     font-size: 20px;
     font-style: normal;
     font-weight: 400;
-    margin-top: 24px;
+    /* margin-top: 24px; */
+    margin-bottom: 24px;
 `
 
 const CloseButton = styled.button`
