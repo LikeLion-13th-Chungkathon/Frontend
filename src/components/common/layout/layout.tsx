@@ -1,6 +1,23 @@
 // src/components/layout/Layout.tsx
 import styled from "styled-components";
 import type { PropsWithChildren } from "react";
+import BottomNav from "../BottomNav";
+
+// const NAV_HEIGHT = 64;
+
+// const HIDE_NAV_PATHS = [
+//     // 나중에 navbar 제외할 페이지 넣기
+//     // ex. /^\/login$/
+// ]
+
+export default function Layout({ children }: PropsWithChildren) {
+  return (
+    <Wrapper>
+      <AppContainer>{children}</AppContainer>
+      <BottomNav />
+    </Wrapper>
+  );
+}
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -19,11 +36,3 @@ const AppContainer = styled.main`
   display: flex;
   flex-direction: column;
 `;
-
-export default function Layout({ children }: PropsWithChildren) {
-  return (
-    <Wrapper>
-      <AppContainer>{children}</AppContainer>
-    </Wrapper>
-  );
-}
