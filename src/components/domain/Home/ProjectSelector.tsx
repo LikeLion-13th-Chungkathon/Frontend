@@ -100,8 +100,11 @@ const ProjectButton = styled.button<{ isActive: boolean }>`
     isActive ? "white" : theme.colors.textSecondary};
 
   font-family: ${({ theme }) => theme.fonts.primary}; // ⬅️ 폰트 적용
-  font-weight: 500;
-  min-width: 60px;
+  font-weight: ${({ isActive }) => (isActive ? "bold" : "normal")};
+  cursor: pointer;
+
+  /* 버튼의 최소 크기를 보장 (내용이 짧아도) */
+  // min-width: 60px;
 `;
 
 const AddButton = styled.button`
