@@ -99,7 +99,31 @@ const NoteDetailModal = ({ noteId, onClose }: NoteDetailModalProps) => {
           [{noteData?.projectId || "..."}의 {currentTime}]{" "}
           {/* (데이터에서 렌더링) */}
         </Header>
-        <TagButtons>{/* (버튼들은 100% 동일) */}</TagButtons>
+        <TagButtons>
+          <TagButton
+            color="#FFEC5E"
+            active={activeCategory === "PROBLEM"}
+            onClick={() => editorActions.setActiveCategory("PROBLEM")}
+          >
+            문제
+          </TagButton>
+          {/* 아이디어 버튼 */}
+          <TagButton
+            color="#FF83CD"
+            active={activeCategory === "IDEA"}
+            onClick={() => editorActions.setActiveCategory("IDEA")}
+          >
+            아이디어
+          </TagButton>
+          {/* 해결 버튼 */}
+          <TagButton
+            color="#86FF7B"
+            active={activeCategory === "SOLUTION"}
+            onClick={() => editorActions.setActiveCategory("SOLUTION")}
+          >
+            해결
+          </TagButton>
+        </TagButtons>
         <EditorWrapper>
           <HighlightRenderer content={content} highlights={highlights} />
           <NoteEditor
@@ -286,4 +310,10 @@ const CloseButton = styled.button`
 
 const Button = styled.button<{ primary?: boolean }>`
   /* (버튼 스타일링...) */
+`;
+
+const TagButton = styled.button<{ color: string; active: boolean }>`
+  background-color: ${(p) => p.color};
+  border: 2px solid
+    ${(p) => (p.active ? p.theme.colors.primary : "transparent")};
 `;

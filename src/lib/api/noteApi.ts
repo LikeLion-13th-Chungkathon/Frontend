@@ -60,41 +60,20 @@ const updateNote = async ({
 };
 
 const fetchNoteById = async (noteId: string): Promise<DailyNote> => {
-  // const { data } = await myAxios.get(`/notes/${noteId}`);
   console.log("API: 노트 상세 조회", noteId);
-  const data: DailyNote = {
-    // 더미데이터
-    id: noteId,
-    date: "2025-11-10",
-    content:
-      "어제 회의에서 '문제'를 발견했다. '아이디어'가 떠올랐고, '해결'했다.",
-    highlights: [
-      {
-        id: "hl-1",
-        category: "PROBLEM",
-        startIndex: 8,
-        endIndex: 11,
-        text: "문제",
-      },
-      {
-        id: "hl-2",
-        category: "IDEA",
-        startIndex: 20,
-        endIndex: 25,
-        text: "아이디어",
-      },
-      {
-        id: "hl-3",
-        category: "SOLUTION",
-        startIndex: 31,
-        endIndex: 33,
-        text: "해결",
-      },
-    ],
-    projectId: "proj-1",
-    createdAt: "2025-11-10T14:00:00Z",
-    updatedAt: "2025-11-10T14:00:00Z",
-  };
+
+  // 더미데이터에서 noteId 일치하는 노트 찾기
+  const foundNote = DUMMY_NOTES.find((note) => note.id === noteId);
+
+  if (!foundNote) {
+    console.warn(
+      `노트(ID: ${noteId})를 찾을 수 없습니다. 기본 노트를 반환합니다.`
+    );
+    return DUMMY_NOTES[0];
+  }
+
+  const data: DailyNote = foundNote;
+
   return new Promise((res) => setTimeout(() => res(data), 500));
 };
 
