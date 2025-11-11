@@ -23,43 +23,30 @@ export const DUMMY_PROJECTS: ProjectEvent[] = [
 // 렌딩페이지에 쓸 노트 기록 데이터
 export const DUMMY_NOTES: DailyNote[] = [
   {
-    id: "note-1",
-    date: "2025-11-04", // 11월 4일자 노트
-    content: "오늘 달력 컴포넌트 구현했다.",
+    id: "note-today-1",
+    date: "2025-11-11", // ⬅️ 오늘 날짜로 수정
+    content: "오늘 날짜의 테스트 노트입니다. 클릭하세요.",
     highlights: [],
-    createdAt: "2025-11-04T10:00:00Z",
-    updatedAt: "2025-11-04T10:00:00Z",
+    projectId: "proj-1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: "note-2",
-    date: "2025-11-04", // 11월 4일자 노트
-    content: "저녁에 아이디어 회의함. 문제 정의 다시.",
-    highlights: [
-      {
-        id: "hl-1",
-        category: "PROBLEM",
-        startIndex: 16,
-        endIndex: 22,
-        text: "문제 정의",
-      },
-    ],
-    createdAt: "2025-11-04T19:30:00Z",
-    updatedAt: "2025-11-04T19:30:00Z",
+    id: "note-today-2",
+    date: "2025-11-11", // ⬅️ 오늘 날짜로 수정
+    content: "오늘 날짜의 테스트 노트입니다. 클릭하세요.",
+    highlights: [],
+    projectId: "proj-1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: "note-3",
-    date: "2025-11-07", // 11월 7일자 노트
-    content: "API 명세서 초안 작성 완료.",
-    highlights: [
-      {
-        id: "hl-2",
-        category: "SOLUTION",
-        startIndex: 0,
-        endIndex: 16,
-        text: "API 명세서 초안 작성 완료.",
-      },
-    ],
-    createdAt: "2025-11-07T14:00:00Z",
-    updatedAt: "2025-11-07T14:00:00Z",
+    id: "note-today-3",
+    date: "2025-11-11", // ⬅️ 오늘 날짜로 수정
+    content: "오늘 날짜의 테스트 노트입니다. 클릭하세요.",
+    highlights: [],
+    projectId: "proj-1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
