@@ -6,18 +6,7 @@ import useCalendarStore, {
 } from "../../../store/useCalendarStore";
 import { Plus } from "lucide-react";
 
-// 0. (임시) 모달 컴포넌트 - 나중에 분리하세요.
-const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
-  return (
-    <ModalBackdrop onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <h2>새 프로젝트 만들기</h2>
-        <p>프로젝트 생성 폼이 여기에 들어갑니다.</p>
-        <button onClick={onClose}>닫기</button>
-      </ModalContent>
-    </ModalBackdrop>
-  );
-};
+import CreateProjectModal from "../Project/CreateProjectModal";
 
 const ProjectSelector = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,10 +41,12 @@ const ProjectSelector = () => {
         <Plus size={20} />
       </AddButton>
 
-      {/* 모달 */}
-      {isModalOpen && (
-        <CreateProjectModal onClose={() => setIsModalOpen(false)} />
-      )}
+      {/* 모달창 수정 후 추가 */}
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={(payload) => console.log("새 프로젝트 생성:", payload)}
+      />
     </Wrapper>
   );
 };
@@ -122,24 +113,4 @@ const AddButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-`;
-
-// (임시) 모달 스타일
-const ModalBackdrop = styled.div`
-  position: fixed; // ⬅️ max-width(375px)를 벗어나 전체 화면을 덮음
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const ModalContent = styled.div`
-  width: 300px;
-  padding: 20px;
-  background-color: white;
-  border-radius: 8px;
 `;
