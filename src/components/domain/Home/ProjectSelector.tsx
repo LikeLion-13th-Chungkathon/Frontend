@@ -90,7 +90,7 @@ const ProjectButton = styled.button<{ isActive: boolean }>`
   cursor: pointer;
 
   /* 버튼의 최소 크기를 보장 (내용이 짧아도) */
-  min-width: 60px;
+  // min-width: 60px;
 `;
 
 const AddButton = styled.button`
