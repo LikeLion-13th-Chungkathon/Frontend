@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import type { ProjectEvent } from "../../../types";
+import { Flame } from "lucide-react";
 
 // 프로젝트 인포 컴포넌트
 
@@ -73,7 +74,9 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
           <ProgressFill style={{ width: `${progressPercent}%` }} />
         </ProgressBar>
         {/* 불꽃 아이콘 (left가 %로 조절됨) */}
-        <FlameIcon style={{ left: `${progressPercent}%` }}>🔥</FlameIcon>
+        <FlameIconWrapper style={{ left: `${progressPercent}%` }}>
+          <Flame size={24} />
+        </FlameIconWrapper>
       </ProgressContainer>
     </Wrapper>
   );
@@ -86,7 +89,7 @@ export default ProjectInfo;
 const Wrapper = styled.div`
   width: 100%;
   padding: 16px;
-  border-bottom: 1px solid #eee;
+  background-color: ${({ theme }) => theme.colors.bodyBg};
   box-sizing: border-box;
 `;
 
@@ -98,52 +101,50 @@ const InfoRow = styled.div`
 `;
 
 const InfoChip = styled.span`
-  background-color: #f1f1f1;
+  background-color: ${({ theme }) => theme.colors.primary};
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 500;
-  color: #555;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  color: white;
 `;
 
 const Title = styled.h2`
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 900;
   margin: 10px 0;
-  color: #000;
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 const ProgressContainer = styled.div`
-  position: relative; // ⬅️ 불꽃 아이콘의 기준점이 됨
+  position: relative; // 불꽃 아이콘의 기준점이 됨
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 8px 0; // 불꽃이 잘리지 않게 상하 여백
+  padding: 16px 0 8px 0; // 불꽃이 잘리지 않게 상하 여백
+`;
+
+const FlameIconWrapper = styled.div`
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  transition: left 0.4s ease-out;
+
+  color: #e53e3e; // (시안의 붉은색 예시. theme.colors.primary도 가능)
 `;
 
 const ProgressBar = styled.div`
   width: 100%;
-  height: 6px;
-  background-color: #e0e0e0; // ⬅️ 전체 바
-  border-radius: 3px;
+  height: 8px;
+  background-color: ${({ theme }) => theme.colors.background};
+  border-radius: 4px;
   overflow: hidden;
 `;
 
 const ProgressFill = styled.div`
   height: 100%;
-  background-color: ${({ theme }) =>
-    theme.colors.primary}; // ⬅️ 채워지는 바 (테마 색상)
+  background-color: ${({ theme }) => theme.colors.primary};
   border-radius: 3px;
   transition: width 0.4s ease-out; // 부드럽게 움직이도록
-`;
-
-const FlameIcon = styled.span`
-  position: absolute;
-  top: 0; // ProgressContainer의 중앙
-  font-size: 20px;
-
-  /* ⬇️ 핵심: 아이콘의 정중앙이 left % 지점에 오도록 함 */
-  transform: translateX(-50%);
-
-  transition: left 0.4s ease-out; // 부드럽게 움직이도록
 `;

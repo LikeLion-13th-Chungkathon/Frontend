@@ -11,8 +11,8 @@ import {
 
 import HomePage from "./pages/HomePage";
 import Layout from "./components/common/layout/layout";
-import CreateNotePage from "./pages/CreateNotePage";
 import ReviewsPage from "./pages/ReviewsPage";
+import NewNotePage from "./pages/NewNotePage";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +39,7 @@ const router = createBrowserRouter([
   {
     //Layout이 필요 없는 그룹
     path: "/create",
-    element: <CreateNotePage />,
+    element: <NewNotePage />,
   },
 ]);
 

@@ -1,16 +1,20 @@
 import type { DailyNote, Highlight } from "../types";
 
-// 노트 생성 및 수정 API 요청 예시
-export interface CraeteNoteDTO {
+// 텍스트 전용 노트 생성 DTO
+export interface CreateTextNoteDTO {
   projectId: string;
   content: string;
-
-  highlights: Omit<Highlight, "id">[];
 }
 
-// 노트 생성 및 수정 API (POST/notes) 응답
-export interface CreateNoteResponse {
-  newNote: DailyNote;
-  // 첫 태킹 완료 여부에 따라 (벡엔드가 판단) 값이 true일때만 통나무 획득 모달 띄우기
+export interface UpdateNoteDTO {
+  // noteId는 URL 파라미터로 보낸다고 가정
+  content: string;
+  highlights: Omit<Highlight, "id">[]; // 하이라이트 정보
+}
+
+// 노트 "수정(하이라이팅)" API 응답
+export interface UpdateNoteResponse {
+  updatedNote: DailyNote;
+  //2.1 통나무 모달은 "수정" 시에만 뜨게
   isFirstContribution: boolean;
 }

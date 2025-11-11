@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { useNotesByDateQuery } from "../../../lib/api/noteApi";
 import useCalendarStore from "../../../store/useCalendarStore";
 import type { DailyNote, HighlightCategory } from "../../../types";
+import WoodPlankBg from "../../../assets/images/wood-plank.png";
 
 const categoryColors: Record<HighlightCategory, string> = {
   PROBLEM: "#FFEB3B", // 문제
@@ -11,11 +12,12 @@ const categoryColors: Record<HighlightCategory, string> = {
 
 interface NoteCardProps {
   note: DailyNote;
+  onClick: () => void; // 클릭 핸들러
 }
 
-const NoteCard = ({ note }: NoteCardProps) => {
+const NoteCard = ({ note, onClick }: NoteCardProps) => {
   return (
-    <CardWrapper>
+    <CardWrapper onClick={onClick}>
       {/* 1. 노트 전체 텍스트 보여주기 */}
       <CardContent>{note.content}</CardContent>
 
@@ -31,7 +33,12 @@ const NoteCard = ({ note }: NoteCardProps) => {
   );
 };
 
-const NotePreviewList = () => {
+// HomePage에서 onNoteClick 함수 받기
+interface NotePreviewListProps {
+  onNoteClick: (noteId: string) => void;
+}
+
+const NotePreviewList = ({ onNoteClick }: NotePreviewListProps) => {
   // zustand에서 선택된 날짜 가져오기
   const selectedDate = useCalendarStore((state) => state.selectedDate);
 
@@ -51,7 +58,13 @@ const NotePreviewList = () => {
     }
 
     // 데이터 없으면 NoteCard 컴포넌트로 렌더링
-    return notes.map((note) => <NoteCard key={note.id} note={note} />);
+    return notes.map((note) => (
+      <NoteCard
+        key={note.id}
+        note={note}
+        onClick={() => onNoteClick(note.id)}
+      />
+    ));
   };
 
   return <Wrapper>{renderContent()}</Wrapper>;
@@ -66,33 +79,54 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px; // 카드 사이의 간격
+
+  background-color: ${({ theme }) => theme.colors.bodyBg};
 `;
 
 // "노트가 없습니다" 등의 상태를 표시할 텍스트
 const StatusText = styled.div`
   text-align: center;
-  color: #888;
+  color: ${({ theme }) => theme.colors.textSecondary};
   padding: 20px 0;
   font-size: 14px;
 `;
 
 // 노트 카드 (기획안의 '네모박스')
 const CardWrapper = styled.div`
-  background-color: #f9f9f9; // 기획안의 연한 회색 배경
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #eee;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  /* 나무 판자 이미지 배경 적용 */
+  background-image: url(${WoodPlankBg});
+  background-size: 100% 100%; //
+  background-repeat: no-repeat;
+  border: none; //
+  box-shadow: none; //
+
+  padding: 16px 20px;
+
+  /*시안의 시간(hh:mm) 표시를 위해 추가*/
+  position: relative;
+  min-height: 60px; // ⬅️ 최소 높이 (디자인에 맞게 조절)
+
+  /*시간(hh:mm) 표시 (예시) */
+  &::after {
+    content: "hh:mm"; // ⬅️ 실제로는 note.createdAt에서 시간을 받아와야 함
+    position: absolute;
+    bottom: 12px;
+    right: 20px;
+    font-size: 12px;
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
 `;
 
 const CardContent = styled.p`
   font-size: 14px;
-  color: #333;
+  color: ${({ theme }) => theme.colors.text};
   line-height: 1.6; // 줄 간격
   margin: 0;
 
   /* ⬇️ 사용자가 입력한 줄바꿈(enter)을 그대로 표시해 줍니다. */
   white-space: pre-wrap;
+
+  padding-right: 40px;
 `;
 
 // 하이라이트 점(태그)들을 감싸는 리스트
@@ -102,7 +136,7 @@ const HighlightTagList = styled.div`
   gap: 6px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #eee; // 내용과 구분선
+  border-top: 1px solid rgba(202, 136, 83, 0.3);
 `;
 
 // 하이라이트 색상 점

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 // 4단계에서 만든 하위 컴포넌트들
@@ -6,6 +6,7 @@ import ProjectSelector from "../components/domain/Home/ProjectSelector";
 import ProjectInfo from "../components/domain/Home/ProjectInfo";
 import HomeCalendar from "../components/domain/Home/HomeCalendar";
 import NotePreviewList from "../components/domain/Home/NotePreviewList";
+import NoteDetailModal from "../components/domain/Home/NoteDetailModal";
 
 // 5단계에서 만들 공통 컴포넌트
 // import TabBar from '../components/common/Layout/TabBar';
@@ -23,6 +24,9 @@ const HomePage = () => {
   // 2. Zustand에서 활성 프로젝트 ID와 액션을 가져옵니다.
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
   const { setActiveProjectId } = useCalendarActions();
+
+  // 모달 제어를 위한 상태
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   // 3. 앱 로드 시, 첫 번째 프로젝트를 활성 프로젝트로 자동 설정합니다.
   useEffect(() => {
@@ -50,7 +54,19 @@ const HomePage = () => {
       {activeProject && <HomeCalendar project={activeProject} />}
 
       {/* 4. 노트 미리보기 리스트 (날짜에 따라 자동 업데이트됨) */}
-      <NotePreviewList />
+      <NotePreviewList
+        // 3. (해결책) 'onNoteClick' prop을 전달합니다.
+        //    "카드가 클릭되면, editingNoteId를 그 카드의 ID로 설정해라"
+        onNoteClick={(noteId) => setEditingNoteId(noteId)}
+      />
+
+      {/* editingNoteId가 생기면 모달 렌더링 */}
+      {editingNoteId && (
+        <NoteDetailModal
+          noteId={editingNoteId}
+          onClose={() => setEditingNoteId(null)}
+        />
+      )}
 
       {/* 5. 하단 탭바 (별도 Layout으로 빠질 수도 있음) */}
       {/* <TabBar /> */}

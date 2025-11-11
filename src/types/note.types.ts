@@ -19,6 +19,7 @@ export interface DailyNote {
   date: string;
   content: string;
   highlights: Highlight[];
+  projectId: string;
   createdAt: string;
   updatedAt: string;
 }

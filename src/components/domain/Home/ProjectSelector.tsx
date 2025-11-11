@@ -4,6 +4,7 @@ import { useProjectQuery } from "../../../lib/api/projectApi";
 import useCalendarStore, {
   useCalendarActions,
 } from "../../../store/useCalendarStore";
+import { Plus } from "lucide-react";
 
 // 0. (임시) 모달 컴포넌트 - 나중에 분리하세요.
 const CreateProjectModal = ({ onClose }: { onClose: () => void }) => {
@@ -47,7 +48,9 @@ const ProjectSelector = () => {
       </ProjectList>
 
       {/* + 버튼 */}
-      <AddButton onClick={() => setIsModalOpen(true)}>+</AddButton>
+      <AddButton onClick={() => setIsModalOpen(true)}>
+        <Plus size={20} />
+      </AddButton>
 
       {/* 모달 */}
       {isModalOpen && (
@@ -64,23 +67,22 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  box-sizing: border-box; // ⬅️ padding을 줘도 width 100% 유지
+  /* border-bottom: 1px solid #eee; ⬅️ 제거 (시안에 없음) */
+  box-sizing: border-box;
+  background-color: ${({ theme }) => theme.colors.bodyBg};
 `;
 
 const ProjectList = styled.div`
-  flex: 1; // ⬅️ '+' 버튼을 제외한 모든 공간을 차지
+  flex: 1;
   display: flex;
-  gap: 8px; // 버튼 사이 간격
-  overflow-x: auto; // ⬅️ 핵심: 내용이 넘치면 가로 스크롤
-  white-space: nowrap; // ⬅️ 버튼들이 한 줄로 나열됨
-
-  /* 스크롤바 숨기기 (디자인을 위해) */
+  gap: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
   &::-webkit-scrollbar {
     display: none;
   }
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 `;
 
 // 'isActive' prop에 따라 스타일이 바뀌는 버튼
@@ -88,18 +90,17 @@ const ProjectButton = styled.button<{ isActive: boolean }>`
   padding: 8px 12px;
   border-radius: 16px;
   border: 1px solid;
-
-  /* ⬇️ 활성화 여부에 따라 다른 스타일 적용 */
-  border-color: ${({ isActive, theme }) =>
-    isActive ? theme.colors.primary : "#ddd"};
-  background-color: ${({ isActive, theme }) =>
-    isActive ? theme.colors.primary : "white"};
-  color: ${({ isActive }) => (isActive ? "white" : "black")};
-
-  font-weight: ${({ isActive }) => (isActive ? "bold" : "normal")};
   cursor: pointer;
 
-  /* 버튼의 최소 크기를 보장 (내용이 짧아도) */
+  border-color: ${({ isActive, theme }) =>
+    isActive ? theme.colors.primary : "#E0E0E0"}; // 연한 테두리
+  background-color: ${({ isActive, theme }) =>
+    isActive ? theme.colors.primary : "white"};
+  color: ${({ isActive, theme }) =>
+    isActive ? "white" : theme.colors.textSecondary};
+
+  font-family: ${({ theme }) => theme.fonts.primary}; // ⬅️ 폰트 적용
+  font-weight: 500;
   min-width: 60px;
 `;
 
@@ -107,15 +108,17 @@ const AddButton = styled.button`
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px dashed #aaa;
-  background-color: #f5f5f5;
-  margin-left: 12px; // ⬅️ 스크롤 영역과 간격
+  border: 1px dashed ${({ theme }) => theme.colors.primary};
+  background-color: white;
+  margin-left: 12px;
   cursor: pointer;
-  font-size: 20px;
-  color: black;
-
-  /* ⬇️ flex: 1 때문에 줄어들지 않도록 고정 */
+  color: ${({ theme }) => theme.colors.primary};
   flex-shrink: 0;
+
+  /* ⬇️ 아이콘을 버튼 중앙에 배치 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 // (임시) 모달 스타일
