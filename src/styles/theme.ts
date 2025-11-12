@@ -5,6 +5,7 @@ const theme: Theme = {
   colors: {
     //포인트 컬러
     primary: "#CA8853",
+    primary2: "#7D4519",
 
     //배경컬러
     bodyBg: "#FFF7ED", // 앱콘텐츠배경
