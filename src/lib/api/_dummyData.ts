@@ -9,6 +9,7 @@ export const DUMMY_PROJECTS: ProjectEvent[] = [
     endDate: "2025-11-18",
     category: "HACKATHON",
     memberCount: 5,
+    inviteCode: "CHUNGANG",
   },
   {
     id: "proj-2",
@@ -17,6 +18,18 @@ export const DUMMY_PROJECTS: ProjectEvent[] = [
     endDate: "2025-12-10",
     category: "CONFERENCE",
     memberCount: 3,
+    inviteCode: "SIDE",
+  },
+
+  //팀원 초대코드 확인용
+  {
+    id: "proj-3",
+    title: "멋쟁이사자즈",
+    startDate: "2025-11-24",
+    endDate: "2025-12-5",
+    category: "CONFERENCE",
+    memberCount: 5,
+    inviteCode: "LIKELIONS-13"
   },
 ];
 

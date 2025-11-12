@@ -56,6 +56,7 @@ export const useCreateProjectMutation = () => {
         ...newProject,
         category: "HACKATHON", // 기본값
         memberCount: 1,        // 기본값(팀대표 1명으로 시작)
+        inviteCode: "EXAMPLE"
         // color: "#C78550",   // 필요하면 유지
       });
 
@@ -72,6 +73,42 @@ export const useCreateProjectMutation = () => {
 
     onSuccess: () => {
       // React Query 캐시된 ["projects"] 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+};
+
+export const useJoinProjectMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    Project, // 성공 시 반환 타입
+    Error,   // 에러 타입
+    string   // 입력값 (inviteCode)
+  >({
+    mutationFn: async (inviteCode) => {
+      // 해당 초대코드로 프로젝트 찾기
+      const project = DUMMY_PROJECTS.find(
+        (p) => p.inviteCode === inviteCode
+      );
+
+      if (!project) {
+        throw new Error("유효하지 않은 초대코드입니다");
+      }
+
+      // 팀원 수 증가
+      project.memberCount += 1;
+
+      console.log("참여 성공:", project);
+
+      // 가짜 fetch로 비동기 흉내
+      return new Promise<Project>((resolve) =>
+        setTimeout(() => resolve(project), 500)
+      );
+    },
+
+    onSuccess: () => {
+      // 프로젝트 목록 다시 불러오기
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
