@@ -1,3 +1,4 @@
+import { useState } from "react";
 import styled from "styled-components";
 
 export default function InviteCodeView({
@@ -7,6 +8,14 @@ export default function InviteCodeView({
     code: string;
     onClose: () => void;
 }) {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        await navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    }
+
     return (
         <Wrap>
             <TextBox>
@@ -16,8 +25,8 @@ export default function InviteCodeView({
             <CodeText>초대코드: {code}</CodeText>
 
             <BtnContainer>
-                <CopyBtn onClick={() => navigator.clipboard.writeText(code)}>
-                초대코드 복사
+                <CopyBtn type="button" onClick={handleCopy} >
+                    {copied ? "복사됨!" : "초대코드 복사"}
                 </CopyBtn>
                 <SubmitBtn type="button" onClick={onClose}>
                     완료
