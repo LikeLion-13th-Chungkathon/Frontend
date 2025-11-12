@@ -10,8 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.7",
+    "@tanstack/react-query-devtools": "^5.90.2",
     "axios": "^1.13.1",
+    "lucide-react": "^0.553.0",
+    "normalize.css": "^8.0.1",
     "react": "^19.1.1",
+    "react-calendar": "^6.0.0",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5",
     "styled-components": "^6.1.19",
@@ -22,7 +27,9 @@
     "@eslint/js": "^9.36.0",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
+    "@types/react-calendar": "^3.9.0",
     "@types/react-dom": "^19.1.9",
+    "@types/styled-components": "^5.1.35",
     "@vitejs/plugin-react": "^5.0.4",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
