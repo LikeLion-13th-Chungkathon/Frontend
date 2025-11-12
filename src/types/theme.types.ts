@@ -5,6 +5,7 @@ export interface Theme {
     textSecondary: string;
     // 여기에 추가적인 색상들을 정의
     primary: string;
+    primary2: string;
     background: string;
     background2: string;
   };
