@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // import axiosInstance from "../axios"; // 나중에 백 붙을 때 쓸 예정
 import { DUMMY_PROJECTS } from "./_dummyData";
+import type { ProjectEvent } from "../../types";
 
 // 공통 타입 정의
 export type Project = {
@@ -29,9 +30,9 @@ export const fakeFetch = <T>(data: T, delay = 500): Promise<T> =>
 
 // 프로젝트 목록 조회 (더미 데이터)
 export const useProjectQuery = () =>
-  useQuery<Project[]>({
+  useQuery<ProjectEvent[]>({
     queryKey: ["projects"],
-    queryFn: () => fakeFetch(DUMMY_PROJECTS as Project[]),
+    queryFn: () => fakeFetch(DUMMY_PROJECTS),
     staleTime: 30_000,
   });
 
