@@ -8,6 +8,14 @@ const GlobalStyle = createGlobalStyle`
   //프리텐다드 폰트 불러오기
   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
+  // 이서윤체 폰트 불러오기
+  @font-face {
+    font-family: "LeeSeoyun";
+    src: url("/fonts/LeeSeoyun.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
+
   ${normalize}
 
   * {
