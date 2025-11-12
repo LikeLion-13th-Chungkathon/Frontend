@@ -7,4 +7,5 @@ export interface ProjectEvent {
   endDate: string;
   category: string;
   memberCount: number;
+  inviteCode: string;
 }
