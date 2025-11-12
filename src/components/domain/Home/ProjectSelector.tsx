@@ -67,7 +67,7 @@ const Wrapper = styled.div`
 const ProjectList = styled.div`
   flex: 1;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   white-space: nowrap;
   &::-webkit-scrollbar {
@@ -79,31 +79,31 @@ const ProjectList = styled.div`
 
 // 'isActive' prop에 따라 스타일이 바뀌는 버튼
 const ProjectButton = styled.button<{ isActive: boolean }>`
-  padding: 8px 12px;
-  border-radius: 16px;
-  border: 1px solid;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: none;
   cursor: pointer;
 
   border-color: ${({ isActive, theme }) =>
-    isActive ? theme.colors.primary : "#E0E0E0"}; // 연한 테두리
+    isActive ? theme.colors.primary : "#C5C5C5"}; // 연한 테두리
   background-color: ${({ isActive, theme }) =>
-    isActive ? theme.colors.primary : "white"};
+    isActive ? theme.colors.primary : "#C5C5C5"};
   color: ${({ isActive, theme }) =>
     isActive ? "white" : theme.colors.textSecondary};
 
   font-family: ${({ theme }) => theme.fonts.primary}; // ⬅️ 폰트 적용
-  font-weight: ${({ isActive }) => (isActive ? "bold" : "normal")};
+  font-weight: 400;
   cursor: pointer;
 
   /* 버튼의 최소 크기를 보장 (내용이 짧아도) */
-  // min-width: 60px;
+  min-width: 60px;
 `;
 
 const AddButton = styled.button`
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 1px dashed ${({ theme }) => theme.colors.primary};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
   background-color: white;
   margin-left: 12px;
   cursor: pointer;

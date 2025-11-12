@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import type { ProjectEvent } from "../../../types";
-import { Flame } from "lucide-react";
+import PersonIcon from "../../../assets/images/human-Img.svg";
+import FlameIcon from "../../../assets/images/fire-img.svg";
 
 // 프로젝트 인포 컴포넌트
 
@@ -59,25 +60,25 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
     <Wrapper>
       {/* 1. 상단 정보 (기간, D-day, 인원) */}
       <InfoRow>
-        <InfoChip>{period}</InfoChip>
-        <InfoChip>{dDay}</InfoChip>
-        <InfoChip>👥 {project.memberCount}명</InfoChip>
+        <InfoPeriodText>{period}</InfoPeriodText>
+        <InfoDDayChip>{dDay}</InfoDDayChip>
+        <InfoPersonInfo>
+          <img src={PersonIcon} alt="인원" /> {project.memberCount}
+        </InfoPersonInfo>
       </InfoRow>
 
-      {/* 2. 프로젝트 제목 */}
-      <Title>{project.title}</Title>
+      <TitleRow>
+        {/* 프로젝트 제목 (이제 ... 처리가 됨) */}
+        <Title>{project.title}</Title>
 
-      {/* 3. 진행률 그래프 */}
-      <ProgressContainer>
-        <ProgressBar>
-          {/* 채워지는 바 (width가 %로 조절됨) */}
-          <ProgressFill style={{ width: `${progressPercent}%` }} />
-        </ProgressBar>
-        {/* 불꽃 아이콘 (left가 %로 조절됨) */}
-        <FlameIconWrapper style={{ left: `${progressPercent}%` }}>
-          <Flame size={24} />
-        </FlameIconWrapper>
-      </ProgressContainer>
+        {/* 진행률 그래프 */}
+        <ProgressContainer>
+          <ProgressBar />
+          <FlameIconWrapper style={{ left: `${progressPercent}%` }}>
+            <img src={FlameIcon} alt="진행률" />
+          </FlameIconWrapper>
+        </ProgressContainer>
+      </TitleRow>
     </Wrapper>
   );
 };
@@ -89,62 +90,146 @@ export default ProjectInfo;
 const Wrapper = styled.div`
   width: 100%;
   padding: 16px;
-  background-color: ${({ theme }) => theme.colors.bodyBg};
+  background-color: transparent;
+  box-sizing: border-box;
+`;
+
+const InfoPeriodText = styled.span`
+  color: #000;
+  text-align: center;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+
+  /* '유도리 있게' 다른 칩들과 높이를 맞추기 위한 패딩 */
+  padding: 4px 10px 4px 0px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
   box-sizing: border-box;
 `;
 
 const InfoRow = styled.div`
   display: flex;
   flex-wrap: wrap; // 혹시 좁아지면 줄바꿈
-  gap: 6px;
   margin-bottom: 8px;
 `;
 
-const InfoChip = styled.span`
+const InfoDDayChip = styled.span`
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 피그마 18px 높이를 맞추기 위해 box-sizing 사용 */
+  height: 20px;
+  padding: 5px 11px;
+  box-sizing: border-box;
+
+  border-radius: 16px; // ⬅️ 시안보다 둥글게 (유도리)
   background-color: ${({ theme }) => theme.colors.primary};
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: ${({ theme }) => theme.fonts.primary};
   color: white;
+
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+`;
+
+// ⬇️ (신규) 3. 인원 (회색 텍스트 + 아이콘)
+const InfoPersonInfo = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px; // ⬅️ 피그마 10px는 너무 넓어 4px로 '유도리 있게' 수정
+
+  /* 다른 요소들과 높이/패딩 맞춤 */
+  padding: 4px 10px;
+  height: 18px;
+  box-sizing: border-box;
+
+  color: #8c8c8c; // ⬅️ 피그마 지정 회색
+  text-align: center;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+
+  img {
+    width: 16px;
+    height: 16px;
+    opacity: 1; // ⬅️ 아이콘이 너무 튀지 않게 (유도리)
+  }
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between; // ⬅️ 양쪽으로 분리
+  gap: 16px; // ⬅️ 제목과 바 사이의 최소 간격
+  margin-top: 10px;
 `;
 
 const Title = styled.h2`
-  font-size: 20px;
-  font-weight: 900;
-  margin: 10px 0;
+  font-size: 22px;
+  font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  margin: 0; // ⬅️ margin은 부모(TitleRow)가 관리
+
+  /* --- ⬇️ ... 처리를 위한 핵심 4줄 --- */
+  flex: 1; /* 1. 남는 공간을 모두 차지 */
+  min-width: 0; /* 2. (중요) flex-item이 줄어들 수 있도록 허용 */
+  white-space: nowrap; /* 3. 줄바꿈 방지 */
+  overflow: hidden; /* 4. 넘치는 내용 숨기기 */
+  text-overflow: ellipsis; /* 5. ... 표시 */
 `;
 
 const ProgressContainer = styled.div`
-  position: relative; // 불꽃 아이콘의 기준점이 됨
-  width: 100%;
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 16px 0 8px 0; // 불꽃이 잘리지 않게 상하 여백
+  height: 28px;
+
+  flex-shrink: 0;
+  width: 140px; /* ⬅️ 진행률 바의 '최소/고정' 너비 (디자인에 맞게 조절) */
 `;
 
 const FlameIconWrapper = styled.div`
   position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  transition: left 0.4s ease-out;
+  top: 45%; // ⬅️ 세로 중앙 정렬
+  transform: translate(-50%, -50%); // ⬅️ 자신의 중앙 기준으로 정렬
 
-  color: #e53e3e; // (시안의 붉은색 예시. theme.colors.primary도 가능)
+  transition: left 0.4s ease-out;
+  z-index: 1; // ⬅️ ProgressBar 위에 오도록
+
+  img {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const ProgressBar = styled.div`
+  position: absolute; // ⬅️ 불꽃 뒤에 깔림
+  top: 50%; // ⬅️ 세로 중앙 정렬
+  transform: translateY(-50%);
+
   width: 100%;
-  height: 8px;
-  background-color: ${({ theme }) => theme.colors.background};
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    #f9dcb7 0%,
+    #ca8853 100%
+  ); // ⬅️ 요청하신 그라데이션
   overflow: hidden;
 `;
 
-const ProgressFill = styled.div`
-  height: 100%;
-  background-color: ${({ theme }) => theme.colors.primary};
-  border-radius: 3px;
-  transition: width 0.4s ease-out; // 부드럽게 움직이도록
-`;
+// const ProgressFill = styled.div`
+//   height: 100%;
+//   background: linear-gradient(90deg, #f9dcb7 0%, #ca8853 100%);
+//   border-radius: 10px; // ⬅️ radius 맞춤
+//   transition: width 0.4s ease-out;
+// `;
