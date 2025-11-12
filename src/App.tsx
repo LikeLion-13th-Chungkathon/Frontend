@@ -10,7 +10,7 @@ import {
 } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
-import Layout from "./components/common/layout/layout";
+import Layout from "./components/common/layout/Layout";
 import ReviewsPage from "./pages/ReviewsPage";
 import NewNotePage from "./pages/NewNotePage";
 
