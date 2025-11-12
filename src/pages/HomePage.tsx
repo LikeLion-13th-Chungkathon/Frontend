@@ -15,11 +15,11 @@ import NoteDetailModal from "../components/domain/Home/NoteDetailModal";
 import useCalendarStore, {
   useCalendarActions,
 } from "../store/useCalendarStore";
-import { useProjectQuery } from "../lib/api/projectApi";
+import { useProjectsQuery } from "../lib/api/projectApi";
 
 const HomePage = () => {
   // 1. React Query로 프로젝트 목록을 가져옵니다.
-  const { data: projects, isLoading } = useProjectQuery();
+  const { data: projects, isLoading } = useProjectsQuery();
 
   // 2. Zustand에서 활성 프로젝트 ID와 액션을 가져옵니다.
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
