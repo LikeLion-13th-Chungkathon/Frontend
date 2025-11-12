@@ -2,23 +2,26 @@
 import styled from "styled-components";
 // import type { PropsWithChildren } from "react";
 import BottomNav from "../BottomNav";
-import { Outlet } from "react-router-dom";
-
-// const NAV_HEIGHT = 64;
-
-// const HIDE_NAV_PATHS = [
-//     // 나중에 navbar 제외할 페이지 넣기
-//     // ex. /^\/login$/
-// ]
+import { Outlet, useLocation } from "react-router-dom";
 
 export default function Layout() {
+  const location = useLocation();
+
+  // 네비바를 숨길 경로 정의 (정규식 or 문자열 둘 다 가능)
+  const HIDE_NAV_PATHS = ["/login", "/onboarding", "/create"];
+
+  // 현재 경로가 제외 목록에 포함되어 있으면 숨기기
+  const shouldHideNav = HIDE_NAV_PATHS.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
   return (
     <Wrapper>
       <AppContainer>
         {/* children 대신 Outlet사용. 라우터 설정 맞추기*/}
         <Outlet />
       </AppContainer>
-      <BottomNav />
+      {!shouldHideNav && <BottomNav />}
     </Wrapper>
   );
 }

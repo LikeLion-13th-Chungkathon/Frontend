@@ -13,6 +13,8 @@ import HomePage from "./pages/HomePage";
 import Layout from "./components/common/layout/Layout";
 import ReviewsPage from "./pages/ReviewsPage";
 import NewNotePage from "./pages/NewNotePage";
+import LoginPage from "./pages/LoginPage";
+import OnboardingPage from "./pages/OnboardingPage";
 
 const queryClient = new QueryClient();
 
@@ -32,15 +34,19 @@ const router = createBrowserRouter([
       { path: "tags", element: <TagsPage /> },
       { path: "mypage", element: <MyPage /> },
 
+      { path: "create", element: <NewNotePage /> },
+      { path: "login", element: <LoginPage /> },
+      { path: "onboarding", element: <OnboardingPage /> },
+
       // '/'로 접속 시 '/home'으로 자동 이동
       { index: true, element: <Navigate to="/home" replace /> },
     ],
   },
-  {
-    //Layout이 필요 없는 그룹
-    path: "/create",
-    element: <NewNotePage />,
-  },
+  // {
+  //   //Layout이 필요 없는 그룹
+  //   path: "/create",
+  //   element: <NewNotePage />,
+  // },
 ]);
 
 const App = () => {
