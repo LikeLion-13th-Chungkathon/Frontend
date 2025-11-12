@@ -51,7 +51,7 @@ const HomePage = () => {
       {activeProject && <ProjectInfo project={activeProject} />}
 
       {/* 3. 달력 (활성 프로젝트가 있을 때만 표시) */}
-      {activeProject && <HomeCalendar project={activeProject} />}
+      {activeProject && <HomeCalendar />}
 
       {/* 4. 노트 미리보기 리스트 (날짜에 따라 자동 업데이트됨) */}
       <NotePreviewList
