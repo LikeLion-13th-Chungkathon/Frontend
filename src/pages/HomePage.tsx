@@ -63,7 +63,8 @@ const HomePage = () => {
       {/* editingNoteId가 생기면 모달 렌더링 */}
       {editingNoteId && (
         <NoteDetailModal
-          noteId={editingNoteId}
+          isOpen={!!editingNoteId} // noteId 있으면 true, 없으면 false
+          noteId={editingNoteId} // noteId가 null이어도 전달
           onClose={() => setEditingNoteId(null)}
         />
       )}

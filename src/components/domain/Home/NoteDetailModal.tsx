@@ -6,36 +6,46 @@ import {
   useUpdateNoteMutation,
 } from "../../../lib/api/noteApi";
 import type { Highlight, HighlightCategory } from "../../../types";
+import { X } from "lucide-react";
+import Modal from "../../common/Modal";
 
 interface NoteDetailModalProps {
+  isOpen: boolean;
   noteId: string; //어떤 노트를 열지 ID를 받음
   onClose: () => void; //모달을 닫는 함수를 받음
 }
 
 // 노트 페이지
-const NoteDetailModal = ({ noteId, onClose }: NoteDetailModalProps) => {
-  // 4. (신규) noteId로 노트 데이터를 "조회"
-  const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(noteId);
+const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
+  // noteId로 노트 데이터를 "조회"
+  const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
+    noteId! // enable 제어
+  );
 
-  // 5. (신규) noteId에 대한 "수정" 뮤테이션 준비
-  const updateNoteMutation = useUpdateNoteMutation(noteId);
+  // noteId에 대한 "수정" 뮤테이션 준비
+  const updateNoteMutation = useUpdateNoteMutation(noteId!);
 
   const { activeCategory, actions: editorActions } = useEditorStore();
 
-  // 6. 로컬 상태 (기본값을 빈 값으로)
+  // 로컬 상태 (기본값을 빈 값으로)
   const [content, setContent] = useState("");
   const [highlights, setHighlights] = useState<Omit<Highlight, "id">[]>([]);
 
-  // 7. (신규) React Query가 데이터를 "불러오면" 로컬 상태에 세팅
+  //  React Query가 데이터를 "불러오면" 로컬 상태에 세팅
   useEffect(() => {
     if (noteData) {
       setContent(noteData.content);
       setHighlights(noteData.highlights);
+    } else {
+      setContent("");
+      setHighlights([]);
     }
-  }, [noteData]); // ⬅️ noteData가 변경될 때만 실행
+  }, [noteData, noteId]); // ⬅️ noteData가 변경될 때만 실행
 
-  // '완료' 버튼 핸들러 (handleSubmit)
+  // 버튼 핸들러 (handleSubmit)
   const handleSubmit = () => {
+    if (!noteId) return; // noteId가 없으면 중단
+
     updateNoteMutation.mutate(
       {
         content: content,
@@ -71,13 +81,14 @@ const NoteDetailModal = ({ noteId, onClose }: NoteDetailModalProps) => {
 
   // 현재 시간 포맷팅
   const currentTime = useMemo(() => {
-    const now = new Date();
+    // noteData가 있을 땐 noteData의 시간을, 없으면 현재 시간
+    const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
     return `${
-      now.getMonth() + 1
-    }월 ${now.getDate()}일 기록 ${now.getHours()}:${String(
-      now.getMinutes()
+      dateToFormat.getMonth() + 1
+    }월 ${dateToFormat.getDate()}일 기록 ${dateToFormat.getHours()}:${String(
+      dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
-  }, []); // 컴포넌트 마운트 시 한번만 계산되도록.
+  }, [noteData]); // 컴포넌트 마운트 시 한번만 계산되도록.
 
   if (isLoadingNote) {
     return (
@@ -88,42 +99,44 @@ const NoteDetailModal = ({ noteId, onClose }: NoteDetailModalProps) => {
   }
 
   return (
-    <PageWrapper onClick={onClose}>
-      {" "}
-      {/* 8. 뒷배경 클릭 시 닫기 */}
-      <Card onClick={(e) => e.stopPropagation()}>
-        {" "}
-        {/* 9. 모달 클릭은 닫기 방지 */}
-        <CloseButton onClick={onClose}>X</CloseButton> {/* 10. X 버튼 추가 */}
+    <Modal isOpen={isOpen} onClose={onClose} width={335}>
+      <CloseButton onClick={onClose}>
+        <X size={24} />
+      </CloseButton>
+      <ContentContainer>
         <Header>
-          [{noteData?.projectId || "..."}의 {currentTime}]{" "}
-          {/* (데이터에서 렌더링) */}
+          [{noteData?.projectId || "프로젝트"}]의 {currentTime}
         </Header>
+
+        {/* 12. (수정) TagButtons 스타일 및 '+' 버튼 추가 */}
         <TagButtons>
           <TagButton
-            color="#FFEC5E"
-            active={activeCategory === "PROBLEM"}
+            $active={activeCategory === "PROBLEM"}
             onClick={() => editorActions.setActiveCategory("PROBLEM")}
+            color="#FFEC5E" // ⬅️ 노랑 (문제)
           >
             문제
           </TagButton>
-          {/* 아이디어 버튼 */}
           <TagButton
-            color="#FF83CD"
-            active={activeCategory === "IDEA"}
+            $active={activeCategory === "IDEA"}
             onClick={() => editorActions.setActiveCategory("IDEA")}
+            color="#FF83CD" // ⬅️ 분홍 (아이디어)
           >
             아이디어
           </TagButton>
-          {/* 해결 버튼 */}
           <TagButton
-            color="#86FF7B"
-            active={activeCategory === "SOLUTION"}
+            $active={activeCategory === "SOLUTION"}
             onClick={() => editorActions.setActiveCategory("SOLUTION")}
+            color="#86FF7B" // ⬅️ 초록 (해결)
           >
             해결
           </TagButton>
+          {/* <AddTagButton onClick={() => alert("새 태그 추가 (미구현)")}>
+            <Plus size={16} />
+          </AddTagButton> */}
         </TagButtons>
+
+        {/*에디터 래퍼 스타일*/}
         <EditorWrapper>
           <HighlightRenderer content={content} highlights={highlights} />
           <NoteEditor
@@ -131,21 +144,23 @@ const NoteDetailModal = ({ noteId, onClose }: NoteDetailModalProps) => {
             onChange={(e) => setContent(e.target.value)}
             onSelect={handleTextSelect}
             spellCheck="false"
+            // (로딩 중일 때 입력 방지)
+            disabled={isLoadingNote || updateNoteMutation.isPending}
           />
         </EditorWrapper>
+
+        {/* Footer 버튼 스타일 */}
         <Footer>
-          <Button onClick={onClose}>취소</Button>{" "}
-          {/* 11. navigate(-1) 대신 onClose */}
-          <Button
-            primary
+          <CancelButton onClick={onClose}>취소</CancelButton>
+          <SubmitButton
             onClick={handleSubmit}
             disabled={updateNoteMutation.isPending}
           >
             {updateNoteMutation.isPending ? "저장 중..." : "완료"}
-          </Button>
+          </SubmitButton>
         </Footer>
-      </Card>
-    </PageWrapper>
+      </ContentContainer>
+    </Modal>
   );
 };
 
@@ -203,12 +218,13 @@ const HighlightRenderer = ({
 
 // 1. 텍스트 에디터와 렌더러를 겹치기 위한 래퍼
 const EditorWrapper = styled.div`
-  position: relative; // 겹치기 기준
+  position: relative;
   width: 100%;
   height: 200px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white; // 래퍼에 배경색 적용
+  border-radius: 12px; // ⬅️ 시안 적용
+  background-color: white;
+  border: 1px solid #e0e0e0; // ⬅️ 연한 테두리
+  overflow: hidden; // ⬅️ 렌더러가 삐져나가지 않게
 `;
 
 // 2. (뒤) 하이라이트가 렌더링될 Div
@@ -274,46 +290,97 @@ const PageWrapper = styled.div`
   z-index: 100;
 `;
 
-//   background-image: url(${WoodBarkBg});
-const Card = styled.div`
-  position: relative; // ⬅️ X 버튼을 위해
-  width: 90%;
-  max-width: 400px;
-  background-color: #fff7ed; // (테마 bodyBg)
-  border-radius: 12px;
-  padding: 16px;
-`;
-const Header = styled.div`
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 12px;
-`;
 const TagButtons = styled.div`
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  align-items: center;
 `;
 
-const Footer = styled.div`
+const ContentContainer = styled.div`
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+  flex-direction: column;
+  gap: 16px; // ⬅️ 섹션 간 간격
+  margin-top: 40px; // ⬅️ 닫기 버튼과 간격
+  font-family: ${({ theme }) => theme.fonts.primary};
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  /* ... (X 버튼 스타일) */
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  color: #969696; // ⬅️ 시안의 'X'는 연함
 `;
 
-const Button = styled.button<{ primary?: boolean }>`
-  /* (버튼 스타일링...) */
+const Header = styled.div`
+  font-size: 20px;
+  color: black;
+  // text-align: center;
 `;
 
-const TagButton = styled.button<{ color: string; active: boolean }>`
-  background-color: ${(p) => p.color};
-  border: 2px solid
-    ${(p) => (p.active ? p.theme.colors.primary : "transparent")};
+const TagButton = styled.button<{ $active: boolean; color: string }>`
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 22px;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 14px;
+  cursor: pointer;
+
+  /* 활성 상태 */
+  background: ${({ $active, color }) => ($active ? color : "#EEEEEE")};
+  color: ${({ $active }) => ($active ? "black" : "#969696")};
+  border: 1px solid ${({ $active }) => ($active ? "#909090" : "#DDDDDD")};
+
+  /* 비활성 시 투명도 (선택적) */
+  /* opacity: ${({ $active }) => ($active ? 1 : 0.7)}; */
+`;
+
+// (신규) 태그 '+' 버튼
+// const AddTagButton = styled(TagButton).attrs({
+//   as: "button",
+//   $active: false,
+//   color: "#EEEEEE", // ⬅️ 비활성 스타일 강제
+// })`
+//   width: 32px;
+//   height: 32px;
+//   padding: 0;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   flex-shrink: 0;
+//   color: #969696;
+//   border: 1px solid #dddddd;
+// `;
+
+const Footer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+`;
+
+const CancelButton = styled.button`
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+`;
+
+const SubmitButton = styled(CancelButton)`
+  background: ${({ theme }) => theme.colors.primary};
+  border: none;
+  color: white;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
