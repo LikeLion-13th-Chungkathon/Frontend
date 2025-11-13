@@ -80,15 +80,21 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   };
 
   // 현재 시간 포맷팅
-  const currentTime = useMemo(() => {
-    // noteData가 있을 땐 noteData의 시간을, 없으면 현재 시간
+  const formattedTime = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
-    return `${
+
+    // 1. 날짜 부분
+    const datePart = `${
       dateToFormat.getMonth() + 1
-    }월 ${dateToFormat.getDate()}일 기록 ${dateToFormat.getHours()}:${String(
+    }월 ${dateToFormat.getDate()}일 기록`;
+
+    // 2. 시간 부분
+    const timePart = `${dateToFormat.getHours()}:${String(
       dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
-  }, [noteData]); // 컴포넌트 마운트 시 한번만 계산되도록.
+
+    return { datePart, timePart }; // ⬅️ 객체로 반환
+  }, [noteData]);
 
   if (isLoadingNote) {
     return (
@@ -105,9 +111,13 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
       </CloseButton>
       <ContentContainer>
         <Header>
-          [{noteData?.projectId || "프로젝트"}]의 {currentTime}
+          {/* 프로젝트 제목 */}[{noteData?.projectId || "프로젝트"}]
         </Header>
-
+        <Header>
+          {/* 1. 날짜 부분 (기본 Header 스타일) */}
+          {formattedTime.datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
+          <TimeText>{formattedTime.timePart}</TimeText>
+        </Header>
         {/* 12. (수정) TagButtons 스타일 및 '+' 버튼 추가 */}
         <TagButtons>
           <TagButton
@@ -127,7 +137,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           <TagButton
             $active={activeCategory === "SOLUTION"}
             onClick={() => editorActions.setActiveCategory("SOLUTION")}
-            color="#86FF7B" // ⬅️ 초록 (해결)
+            color="#89F3FF" // ⬅️ (해결)
           >
             해결
           </TagButton>
@@ -169,7 +179,7 @@ export default NoteDetailModal;
 const categoryColors = {
   PROBLEM: "rgba(255, 236, 94, 0.7)", // #FFEC5E
   IDEA: "rgba(255, 131, 205, 0.7)", // #FF83CD
-  SOLUTION: "rgba(134, 255, 123, 0.7)", // #86FF7B
+  SOLUTION: "rgba(137, 243, 255, 0.7)", // #89F3FF
 };
 
 // 텍스트랑 하이라이트 배열 받아서
@@ -237,7 +247,7 @@ const RendererContainer = styled.div`
   width: 100%;
   height: 100%;
   padding: 12px; // ⬅️ textarea와 동일한 패딩
-  font-size: 15px; // ⬅️ textarea와 동일한 폰트
+  font-size: 18px; // ⬅️ textarea와 동일한 폰트
   line-height: 1.5; // ⬅️ textarea와 동일한 줄 간격 (필요시 조절)
   box-sizing: border-box; // ⬅️ 패딩 포함 크기 계산
   white-space: pre-wrap; // ⬅️ 줄바꿈(enter)을 렌더링
@@ -256,7 +266,7 @@ const NoteEditor = styled.textarea`
   width: 100%;
   height: 100%;
   padding: 12px; // ⬅️ 렌더러와 동일한 패딩
-  font-size: 15px; // ⬅️ 렌더러와 동일한 폰트
+  font-size: 18px; // ⬅️ 렌더러와 동일한 폰트
   line-height: 1.5; // ⬅️ 렌더러와 동일한 줄 간격 (필요시 조절)
   box-sizing: border-box;
   resize: none;
@@ -299,8 +309,8 @@ const TagButtons = styled.div`
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px; // ⬅️ 섹션 간 간격
-  margin-top: 40px; // ⬅️ 닫기 버튼과 간격
+  gap: 8px; // ⬅️ 섹션 간 간격
+  margin-top: 30px; // ⬅️ 닫기 버튼과 간격
   font-family: ${({ theme }) => theme.fonts.primary};
 `;
 
@@ -318,7 +328,19 @@ const CloseButton = styled.button`
 const Header = styled.div`
   font-size: 20px;
   color: black;
+  margin-top: -8px;
   // text-align: center;
+`;
+
+const TimeText = styled.span`
+  /* 요청하신 스타일 적용 */
+  font-size: 12px;
+  padding-left: 4px;
+  color: #969696;
+
+  /* 나머지 스타일은 Header와 동일하게 유지 */
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 400;
 `;
 
 const TagButton = styled.button<{ $active: boolean; color: string }>`
@@ -364,12 +386,12 @@ const Footer = styled.div`
 
 const CancelButton = styled.button`
   height: 48px;
-  border-radius: 12px;
+  border-radius: 22px;
   border: 1px solid #e0e0e0;
   background: white;
-  color: ${({ theme }) => theme.colors.text};
+  color: #c78550;
   font-family: ${({ theme }) => theme.fonts.primary};
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   cursor: pointer;
 `;
