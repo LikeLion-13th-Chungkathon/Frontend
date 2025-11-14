@@ -15,6 +15,7 @@ import ReviewsPage from "./pages/ReviewsPage";
 import NewNotePage from "./pages/NewNotePage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import { LogAcquiredModal } from "./components/common/Modal/LogAcquiredModal";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,7 @@ const TagsPage = () => <div>태그 페이지</div>;
 const MyPage = () => <div>마이페이지</div>;
 
 // 라우터 지도 정의
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     // Layout이 필요한 페이지들
     path: "/",
@@ -57,6 +58,8 @@ const App = () => {
         <GlobalStyle />
         <ReactQueryDevtools initialIsOpen={false} />
         <RouterProvider router={router} />
+        {/* 통나무 획득 페이지 전역 모달로 만들어주기 */}
+        <LogAcquiredModal />
       </ThemeProvider>
     </QueryClientProvider>
   );
