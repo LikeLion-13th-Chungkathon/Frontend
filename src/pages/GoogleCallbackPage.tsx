@@ -35,7 +35,8 @@ export default function GoogleCallbackPage() {
 
             // 200: 기존 회원 → 로그인 완료
             if (res.status === 200) {
-                const { email, nickname, token } = res.data; // swagger 구조 기준
+                //const { email, nickname, token } = res.data; // swagger 구조 기준
+                const { email, nickname } = res.data; // swagger 구조 기준
 
                 // 필요하면 토큰 저장
                 // localStorage.setItem("accessToken", token.access_token);
