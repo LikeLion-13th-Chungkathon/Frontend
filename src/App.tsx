@@ -38,16 +38,17 @@ export const router = createBrowserRouter([
       { path: "create", element: <NewNotePage /> },
       { path: "login", element: <LoginPage /> },
       { path: "onboarding", element: <OnboardingPage /> },
+      // { path: "account/google/callback/", element: <HomePage /> },
 
       // '/'로 접속 시 '/home'으로 자동 이동
       { index: true, element: <Navigate to="/home" replace /> },
     ],
   },
-  // {
-  //   //Layout이 필요 없는 그룹
-  //   path: "/create",
-  //   element: <NewNotePage />,
-  // },
+
+  {
+    path: "/account/google/callback/*",
+    element: <HomePage />, // 나중에 GoogleCallbackPage로 바꿀 예정
+  },
 ]);
 
 const App = () => {
