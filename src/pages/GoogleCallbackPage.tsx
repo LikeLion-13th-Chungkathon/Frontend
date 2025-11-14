@@ -30,7 +30,7 @@ export default function GoogleCallbackPage() {
 
         (async () => {
             try {
-                const res = await axiosInstance.post("/account/google/signup", { code })
+                const res = await axiosInstance.post("/account/google/callback/", { code })
                 const { user } = res.data.data;
 
                 setUser(user);
