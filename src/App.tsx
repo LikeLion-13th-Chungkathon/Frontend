@@ -15,6 +15,7 @@ import ReviewsPage from "./pages/ReviewsPage";
 import NewNotePage from "./pages/NewNotePage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import { LogAcquiredModal } from "./components/common/Modal/LogAcquiredModal";
 
 const queryClient = new QueryClient();
@@ -38,17 +39,17 @@ export const router = createBrowserRouter([
       { path: "create", element: <NewNotePage /> },
       { path: "login", element: <LoginPage /> },
       { path: "onboarding", element: <OnboardingPage /> },
-      // { path: "account/google/callback/", element: <HomePage /> },
+      { path: "account/google/callback/*", element: <GoogleCallbackPage /> },
 
       // '/'로 접속 시 '/home'으로 자동 이동
       { index: true, element: <Navigate to="/home" replace /> },
     ],
   },
 
-  {
-    path: "/account/google/callback/*",
-    element: <HomePage />, // 나중에 GoogleCallbackPage로 바꿀 예정
-  },
+  // {
+  //   path: "/account/google/callback/*",
+  //   element: <HomePage />, // 나중에 GoogleCallbackPage로 바꿀 예정
+  // },
 ]);
 
 const App = () => {
