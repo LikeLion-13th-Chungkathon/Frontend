@@ -54,13 +54,20 @@ const OnboardingPage = () => {
       setError(null);
       setIsSubmitting(true);
 
-      const body = {
+      const body: any = {
         email: pendingGoogleUser.email,
-        username_from_google: pendingGoogleUser.usernameFromGoogle,
         nickname: nickname.trim(),
       };
 
+      // usernameFromGoogle이 null/"" 아닐 때만 보냄
+      if (pendingGoogleUser.usernameFromGoogle) {
+        body.username_from_google = pendingGoogleUser.usernameFromGoogle;
+      }
+
+      console.log("📦 보내는 바디:", body);
+
       const res = await axiosInstance.post("/account/google/signup/", body);
+
       console.log("✅ 구글 회원가입 완료:", res.data);
 
       // swagger 기준으로 응답 구조 맞춰서 수정
