@@ -6,7 +6,7 @@ type User = { id: string; name: string; email: string } | null;
 
 // 로그인 상태 타입
 // UNAUTHEMTICATED: 로그인 안 된 상태, AUTHENTICATED: 로그인 완료
-type AuthStatus = "UNAUTHENTICATED" | "AUTHENTICATED"
+type AuthStatus = "UNAUTHENTICATED" | "AUTHENTICATED" | "PENDING_GOOGLE_ONBOARDING";
 
 // 로그인된 사용자 정보
 type PendingGoogleUser = {
