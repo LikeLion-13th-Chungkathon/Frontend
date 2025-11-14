@@ -15,7 +15,12 @@ export default function GoogleCallbackPage() {
     const setUser = useAuthStore((s) => s.setUser);
     const setStatus = useAuthStore((s) => s.setStatus);
 
+
     useEffect(() => {
+        console.log("현재 URL:", window.location.href);
+        console.log("raw search:", window.location.search);
+        console.log("code from searchParams:", searchParams.get("code"));
+        
         const code = searchParams.get("code");
         console.error("구글 OAuth code가 없습니다.");
         if (!code) {
