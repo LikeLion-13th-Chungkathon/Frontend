@@ -1,10 +1,15 @@
 import { Home, Tag, Pencil, Star, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
+import useCalendarStore from "../../store/useCalendarStore";
 
 export default function BottomNav() {
     const navigate = useNavigate();
     const location = useLocation();
+
+    // 날짜 상태 가져오기
+    const selectedDate = useCalendarStore((s) => s.selectedDate);
+    const activeProjectId = useCalendarStore((s) => s.activeProjectId);
 
  //네비게이션 데이터 (name, icon, path)
     const navItems = [
@@ -14,7 +19,13 @@ export default function BottomNav() {
         { name: "마이페이지", icon: <User size={22} />, path: "/mypage" },
     ];
 
-    const handleCreate = () => navigate("/create");
+    const handleCreate = () => {
+        if (!activeProjectId) {
+            alert("먼저 프로젝트를 선택해주세요");
+            return;
+        }
+        navigate(`/create?date=${selectedDate}`);
+    }
 
     return (
         <NavContainer>
