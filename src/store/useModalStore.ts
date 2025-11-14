@@ -18,11 +18,13 @@ export const useModalStore = create<ModalState>((set) => ({
   isLogAcquiredModalOpen: false,
   completedProjectName: null,
   actions: {
-    openLogAcquiredModal: (projectName) =>
+    openLogAcquiredModal: (projectName) => {
+      console.log("2. [Zustand] openLogAcquiredModal 액션 실행됨!");
       set({
         isLogAcquiredModalOpen: true,
         completedProjectName: projectName,
-      }),
+      });
+    },
     closeLogAcquiredModal: () =>
       set({
         isLogAcquiredModalOpen: false,

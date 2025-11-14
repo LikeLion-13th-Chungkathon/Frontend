@@ -101,7 +101,8 @@ export const useNoteByIdQuery = (noteId: string) => {
 // 노트 수정(하이라이팅) 뮤테이션
 export const useUpdateNoteMutation = (noteId: string) => {
   const queryClient = useQueryClient();
-  const { openLogAcquiredModal } = useModalActions(); // ⬅️ 통나무 모달
+  // 통나무 모달 열기 액션
+  const { openLogAcquiredModal } = useModalActions();
 
   return useMutation({
     mutationFn: (noteData: UpdateNoteDTO) => updateNote({ noteId, noteData }),
