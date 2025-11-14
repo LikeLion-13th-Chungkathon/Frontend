@@ -4,6 +4,25 @@ import useCalendarStore from "../../../store/useCalendarStore";
 import type { DailyNote, HighlightCategory } from "../../../types";
 import WoodPlankBg from "../../../assets/images/wood-plank.png";
 
+//헬퍼함수
+// HH:MM 형식으로 변환
+const formatTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  // getHours(), getMinutes()는 브라우저의 로컬 시간대를 따릅니다.
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+// 텍스트 maxLength
+
+const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.slice(0, maxLength) + "...";
+};
+
 const categoryColors: Record<HighlightCategory, string> = {
   PROBLEM: "#FFEB3B", // 문제
   IDEA: "#E91E63", // 아이디어
@@ -16,20 +35,28 @@ interface NoteCardProps {
 }
 
 const NoteCard = ({ note, onClick }: NoteCardProps) => {
-  return (
-    <CardWrapper onClick={onClick}>
-      {/* 1. 노트 전체 텍스트 보여주기 */}
-      <CardContent>{note.content}</CardContent>
+  const time = formatTime(note.updatedAt);
 
-      {/* 2. 하이라이트 태그 있으면, 색상 점으로 표시 */}
-      {note.highlights.length > 0 && (
-        <HighlightTagList>
-          {note.highlights.map((hl) => (
-            <HighlightTag key={hl.id} category={hl.category} />
-          ))}
-        </HighlightTagList>
-      )}
-    </CardWrapper>
+  const truncatedContent = truncateText(note.content, 20);
+
+  return (
+    <NoteItemContainer onClick={onClick}>
+      {/* 3. (수정) 나무 판자 (시간은 이제 외부에 있음) */}
+      <CardWrapper>
+        <CardContent>{truncatedContent}</CardContent>{" "}
+        {/* ⬅️ 잘린 content 전달 */}
+        {note.highlights.length > 0 && (
+          <HighlightTagList>
+            {note.highlights.map((hl) => (
+              <HighlightTag key={hl.id} category={hl.category} />
+            ))}
+          </HighlightTagList>
+        )}
+      </CardWrapper>
+
+      {/* 4. (신규) 시간이 이미지 밖의 "형제" 요소로 분리됨 */}
+      <Timestamp>{time}</Timestamp>
+    </NoteItemContainer>
   );
 };
 
@@ -50,9 +77,11 @@ const NotePreviewList = ({ onNoteClick }: NotePreviewListProps) => {
     if (isLoading) {
       return <StatusText>노트를 불러오는 중...</StatusText>;
     }
+
     if (isError) {
       return <StatusText>노트를 불러오는 중 에러 발생</StatusText>;
     }
+
     if (!notes || notes.length === 0) {
       return <StatusText>작성된 노트가 없습니다.</StatusText>;
     }
@@ -91,42 +120,45 @@ const StatusText = styled.div`
   font-size: 14px;
 `;
 
+const NoteItemContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  gap: 8px;
+  cursor: pointer;
+`;
+
 // 노트 카드 (기획안의 '네모박스')
 const CardWrapper = styled.div`
-  /* 나무 판자 이미지 배경 적용 */
   background-image: url(${WoodPlankBg});
-  background-size: 100% 100%; //
+  background-size: 100% 100%;
   background-repeat: no-repeat;
-  border: none; //
-  box-shadow: none; //
-
+  border: none;
+  box-shadow: none;
   padding: 16px 20px;
-
-  /*시안의 시간(hh:mm) 표시를 위해 추가*/
-  position: relative;
-  min-height: 60px; // ⬅️ 최소 높이 (디자인에 맞게 조절)
-
-  /*시간(hh:mm) 표시 (예시) */
-  &::after {
-    content: "hh:mm"; // ⬅️ 실제로는 note.createdAt에서 시간을 받아와야 함
-    position: absolute;
-    bottom: 12px;
-    right: 20px;
-    font-size: 12px;
-    color: ${({ theme }) => theme.colors.textSecondary};
-  }
 `;
 
 const CardContent = styled.p`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
-  line-height: 1.6; // 줄 간격
+  line-height: 1.6;
   margin: 0;
 
-  /* ⬇️ 사용자가 입력한 줄바꿈(enter)을 그대로 표시해 줍니다. */
+  /* ⬇️ 텍스트 길이에 따라 높이가 유동적으로 변하도록 pre-wrap 유지 */
   white-space: pre-wrap;
 
-  padding-right: 40px;
+  /* 텍스트가 너무 길어질 때를 대비 (선택적) */
+  word-break: break-all;
+`;
+
+const Timestamp = styled.span`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  flex-shrink: 0;
+
+  padding-bottom: 16px;
 `;
 
 // 하이라이트 점(태그)들을 감싸는 리스트
