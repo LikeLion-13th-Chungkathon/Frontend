@@ -40,6 +40,8 @@ const OnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
+  if (isSubmitting) return; // 이미 제출 중이면 무시
+
   const message = validateNickname(nickname);
   if (message) {
     setError(message);

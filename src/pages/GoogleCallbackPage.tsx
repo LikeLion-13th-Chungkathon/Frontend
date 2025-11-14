@@ -12,6 +12,7 @@ export default function GoogleCallbackPage() {
     // Zustand에 저장된 사용자 상태 업데이트 함수들
     const setUser = useAuthStore((s) => s.setUser);
     const setStatus = useAuthStore((s) => s.setStatus);
+    const setPendingGoogleUser = useAuthStore((s) => s.setPendingGoogleUser);
 
     useEffect(() => {
         console.log("현재 URL:", window.location.href);
@@ -35,31 +36,32 @@ export default function GoogleCallbackPage() {
 
             // 200: 기존 회원 → 로그인 완료
             if (res.status === 200) {
-                //const { email, nickname, token } = res.data; // swagger 구조 기준
-                const { email, nickname } = res.data; // swagger 구조 기준
+                const { email, nickname, token } = res.data; // swagger 구조 기준
 
-                // 필요하면 토큰 저장
-                // localStorage.setItem("accessToken", token.access_token);
+                if (token?.access_token) {
+                    localStorage.setItem("accessToken", token.access_token);
+                }
 
-                // TODO: id는 서버 응답에 맞게 수정
                 setUser({ id: "", name: nickname, email });
                 setStatus("AUTHENTICATED");
+                setPendingGoogleUser(null);
+
                 navigate("/home", { replace: true });
                 return;
             }
 
             // 202: 신규 회원 → 닉네임 입력 필요
             if (res.status === 202) {
+                const { email, username_from_google } = res.data;
                 console.log("신규 회원, 닉네임 필요:", res.data);
 
-                // TODO: email, username_from_google 를 어딘가에 저장해두고
-                // 온보딩(닉네임 입력) 페이지로 이동
-                // 예시)
-                // setPendingGoogleUser({
-                //   email: res.data.email,
-                //   username: res.data.username_from_google,
-                // });
+                // 온보딩 페이지에서 쓸 정보 저장
+                setPendingGoogleUser({
+                    email,
+                    usernameFromGoogle: username_from_google ?? "",
+                });
 
+                setStatus("PENDING_GOOGLE_ONBOARDING");
                 navigate("/onboarding", { replace: true });
                 return;
             }
@@ -74,7 +76,7 @@ export default function GoogleCallbackPage() {
                 navigate("/login");
             }
         })();
-    }, [searchParams, navigate, setUser, setStatus]);
+    }, [searchParams, navigate, setUser, setStatus, setPendingGoogleUser]);
 
     return <div>구글 로그인 처리 중</div>;
 }
