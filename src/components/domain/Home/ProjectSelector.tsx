@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
-import { useProjectQuery } from "../../../lib/api/projectApi";
+import { useProjectsQuery } from "../../../lib/api/projectApi";
 import useCalendarStore, {
   useCalendarActions,
 } from "../../../store/useCalendarStore";
@@ -12,7 +12,7 @@ const ProjectSelector = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // React Query로 프로젝트 목록 가져오기
-  const { data: projects, isLoading } = useProjectQuery();
+  const { data: projects, isLoading } = useProjectsQuery();
 
   //Zustand 활성 프로젝트 ID
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
@@ -94,9 +94,6 @@ const ProjectButton = styled.button<{ isActive: boolean }>`
   font-family: ${({ theme }) => theme.fonts.primary}; // ⬅️ 폰트 적용
   font-weight: 400;
   cursor: pointer;
-
-  /* 버튼의 최소 크기를 보장 (내용이 짧아도) */
-  min-width: 60px;
 `;
 
 const AddButton = styled.button`

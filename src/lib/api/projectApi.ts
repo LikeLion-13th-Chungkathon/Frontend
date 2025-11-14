@@ -7,8 +7,8 @@ import type { ProjectEvent } from "../../types";
 export type Project = {
   id: string;
   title: string;
-  startDate: string; 
-  endDate: string; 
+  startDate: string;
+  endDate: string;
 };
 
 export type CreateProjectPayload = {
@@ -22,20 +22,17 @@ export type CreateProjectResponse = {
   inviteCode: string;
 };
 
-
 // 가짜 fetch 유틸 (0.5초 지연)
 export const fakeFetch = <T>(data: T, delay = 500): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(data), delay));
 
-
 // 프로젝트 목록 조회 (더미 데이터)
-export const useProjectQuery = () =>
+export const useProjectsQuery = () =>
   useQuery<ProjectEvent[]>({
     queryKey: ["projects"],
     queryFn: () => fakeFetch(DUMMY_PROJECTS),
     staleTime: 30_000,
   });
-
 
 // 프로젝트 생성 뮤테이션 (더미 push)
 export const useCreateProjectMutation = () => {
@@ -56,8 +53,8 @@ export const useCreateProjectMutation = () => {
       DUMMY_PROJECTS.push({
         ...newProject,
         category: "HACKATHON", // 기본값
-        memberCount: 1,        // 기본값(팀대표 1명으로 시작)
-        inviteCode: "EXAMPLE"
+        memberCount: 1, // 기본값(팀대표 1명으로 시작)
+        inviteCode: "EXAMPLE",
         // color: "#C78550",   // 필요하면 유지
       });
 
@@ -84,14 +81,12 @@ export const useJoinProjectMutation = () => {
 
   return useMutation<
     Project, // 성공 시 반환 타입
-    Error,   // 에러 타입
-    string   // 입력값 (inviteCode)
+    Error, // 에러 타입
+    string // 입력값 (inviteCode)
   >({
     mutationFn: async (inviteCode) => {
       // 해당 초대코드로 프로젝트 찾기
-      const project = DUMMY_PROJECTS.find(
-        (p) => p.inviteCode === inviteCode
-      );
+      const project = DUMMY_PROJECTS.find((p) => p.inviteCode === inviteCode);
 
       if (!project) {
         throw new Error("유효하지 않은 초대코드입니다");
@@ -114,5 +109,3 @@ export const useJoinProjectMutation = () => {
     },
   });
 };
-
-

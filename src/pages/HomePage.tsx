@@ -15,11 +15,11 @@ import NoteDetailModal from "../components/domain/Home/NoteDetailModal";
 import useCalendarStore, {
   useCalendarActions,
 } from "../store/useCalendarStore";
-import { useProjectQuery } from "../lib/api/projectApi";
+import { useProjectsQuery } from "../lib/api/projectApi";
 
 const HomePage = () => {
   // 1. React Query로 프로젝트 목록을 가져옵니다.
-  const { data: projects, isLoading } = useProjectQuery();
+  const { data: projects, isLoading } = useProjectsQuery();
 
   // 2. Zustand에서 활성 프로젝트 ID와 액션을 가져옵니다.
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
@@ -51,7 +51,7 @@ const HomePage = () => {
       {activeProject && <ProjectInfo project={activeProject} />}
 
       {/* 3. 달력 (활성 프로젝트가 있을 때만 표시) */}
-      {activeProject && <HomeCalendar project={activeProject} />}
+      {activeProject && <HomeCalendar />}
 
       {/* 4. 노트 미리보기 리스트 (날짜에 따라 자동 업데이트됨) */}
       <NotePreviewList
@@ -63,7 +63,8 @@ const HomePage = () => {
       {/* editingNoteId가 생기면 모달 렌더링 */}
       {editingNoteId && (
         <NoteDetailModal
-          noteId={editingNoteId}
+          isOpen={!!editingNoteId} // noteId 있으면 true, 없으면 false
+          noteId={editingNoteId} // noteId가 null이어도 전달
           onClose={() => setEditingNoteId(null)}
         />
       )}

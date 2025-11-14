@@ -1,37 +1,28 @@
-// src/components/domain/Login/GoogleLoginButton.tsx
-import { useMutation } from "@tanstack/react-query";
-import useAuthStore from "../../../store/useAuthStore";
-
 export default function GoogleLoginButton() {
-  const { setUser } = useAuthStore();
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const GOOGLE_SEVER_REDIRECT_URL = import.meta.env.VITE_GOOGLE_REDIRECT
+  const GOOGLE_SCOPE = import.meta.env.VITE_GOOGLE_SCOPE_USERINFO;
+  const GOOGLE_CALLBACK_URL = import.meta.env.VITE_GOOGLE_CALLBACK_URI;
 
-  // 가짜 구글 로그인 (나중에 백엔드 붙일 때 여기만 교체)
-  const fakeGoogleLogin = async () => {
-    return new Promise<{ id: string; name: string; email: string }>((resolve) =>
-      setTimeout(
-        () =>
-          resolve({
-            id: "1",
-            name: "테스트 유저",
-            email: "test@example.com",
-          }),
-        800
-      )
-    );
+  const handleGoogleLogin = () => {
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: GOOGLE_CALLBACK_URL,
+      response_type: "code",
+      scope: GOOGLE_SCOPE,
+      access_type: "offline",
+      prompt: "consent",
+    });
+
+    const googleAuthUrl = `${GOOGLE_SEVER_REDIRECT_URL}?${params.toString()}`;
+    console.log("🔎 googleAuthUrl = ", googleAuthUrl);
+    window.location.href = googleAuthUrl;
   };
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: fakeGoogleLogin,
-    onSuccess: (user) => {
-      setUser(user); // 전역 상태에 로그인 정보 저장
-      window.location.href = "/home"; // 홈으로 이동
-    },
-  });
 
   return (
     <button
-      onClick={() => mutate()}
-      disabled={isPending}
+      onClick={handleGoogleLogin}
+      // disabled={isPending}
       style={{
         display: "flex",
         alignItems: "center",
@@ -49,7 +40,7 @@ export default function GoogleLoginButton() {
         width={18}
         height={18}
       />
-      {isPending ? "로그인 중..." : "구글로 로그인하기"}
+      구글로 로그인하기
     </button>
   );
 }

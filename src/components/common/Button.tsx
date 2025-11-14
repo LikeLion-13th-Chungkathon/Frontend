@@ -1,1 +1,38 @@
-// commom 파일 안에는 재사용 가능한 최소 단위의 컴포넌트가 들어갑니다.
+import styled, { css } from "styled-components";
+
+type ButtonVariant = "primary" | "secondary"; 
+type ButtonSize = "large" | "small";
+
+interface StyledButtonProps {
+    variant: ButtonVariant;
+    size: ButtonSize;
+}
+
+export const Button = styled.button<StyledButtonProps>`
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 22px;
+
+    ${({ size }) =>
+        size === "small"
+        ? css`
+            width: 140px;
+            height: 44px;
+            `
+        : css`
+            width: 266px;
+            height: 44px;
+            `}
+
+    ${({ variant, theme }) =>
+        variant === "primary"
+        ? css`
+            background: ${theme.colors.primary}; /* #C78550 */
+            `
+        : css`
+            background: #fff;
+            color: ${theme.colors.primary};;
+            `}
+`;
+

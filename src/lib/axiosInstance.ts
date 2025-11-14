@@ -3,11 +3,11 @@ import axios from "axios";
 
 // axios 기본 인스턴스 생성
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api", 
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
   withCredentials: true, // 필요 시 쿠키 전송 허용
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
 });
 
 // 요청 인터셉터 (예: 토큰 자동 첨부)

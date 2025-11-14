@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import type { ProjectEvent } from "../../../types";
 import useCalendarStore, {
   useCalendarActions,
 } from "../../../store/useCalendarStore";
@@ -12,23 +11,23 @@ type Value = Date | null | [Date | null, Date | null];
 // 헬퍼함수
 
 // YYYY-MM-DD 형식 날짜 문자열을 Date 객체로 반환
-const parseDate = (dateStr: string): Date => {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
+// const parseDate = (dateStr: string): Date => {
+//   const [year, month, day] = dateStr.split("-").map(Number);
+//   return new Date(year, month - 1, day);
+// };
 
-interface HomeCalendarProps {
-  project: ProjectEvent;
-}
+// interface HomeCalendarProps {
+//   project: ProjectEvent;
+// }
 
-const HomeCalendar = ({ project }: HomeCalendarProps) => {
+const HomeCalendar = () => {
   // zustand 상태 액션 가져오기
   const { selectedDate } = useCalendarStore();
   const { setSelectedDate, setCurrentMonth } = useCalendarActions();
 
   // 변수 선언
-  const projectStartDate = parseDate(project.startDate);
-  const projectEndDate = parseDate(project.endDate);
+  // const projectStartDate = parseDate(project.startDate);
+  // const projectEndDate = parseDate(project.endDate);
 
   // 날짜 클릭 시 샐행될 핸들러
   // vlaue는 Date 객체. YYYY-MM-DD 문자열로 변환하여 스토어에 저장
@@ -58,37 +57,18 @@ const HomeCalendar = ({ project }: HomeCalendarProps) => {
     }
   };
 
-  // 각 날짜 타일에 클래스 이름을 부여
-  const getTileClassName = ({
-    date,
-    view,
-  }: {
-    date: Date;
-    view: string;
-  }): string | null => {
-    if (view === "month") {
-      // 비교를 위해 시간을 0시 0분 0초로 초기화
-      date.setHours(0, 0, 0, 0);
-      const start = new Date(projectStartDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(projectEndDate);
-      end.setHours(0, 0, 0, 0);
-
-      // 2. [해결] 이제 projectStartDate, projectEndDate를 사용할 수 있음
-      if (date >= start && date <= end) {
-        return "project-day";
-      }
-    }
-    return null;
-  };
-
   return (
     <CalendarWrapper>
       <Calendar
         value={new Date(selectedDate)} // 선택된 날짜 from store
         onChange={handleDateChange} // 날짜 클릭 핸들러
         onActiveStartDateChange={handleMonthChange}
-        tileClassName={getTileClassName} // 프로젝트 기간 하이라이팅
+        showFixedNumberOfWeeks
+        navigationLabel={({ date }) => `${date.getMonth() + 1}월`} // ⬅️ "11월" 형식
+        prevLabel="<"
+        nextLabel=">"
+        prev2Label={null} // ⬅️ 년도 이동 제거
+        next2Label={null} // ⬅️ 년도 이동 제거
         // 달력 UI 설정
         formatDay={(_locale, date) => date.getDate().toString()} // '일' 제거
         calendarType="gregory"
@@ -102,7 +82,7 @@ export default HomeCalendar;
 
 const CalendarWrapper = styled.div`
   width: 100%;
-  padding: 0 16px; // 좌우 여백
+  padding: 0 0 10px 0;
   box-sizing: border-box;
 
   // 통나무 배경 적용
@@ -115,8 +95,12 @@ const CalendarWrapper = styled.div`
   .react-calendar {
     width: 100%;
     border: none;
-    background: transparent; // ⬅️ 캘린더 배경 투명하게
+    background: transparent;
     font-family: ${({ theme }) => theme.fonts.primary};
+
+    /* ⬇️ (수정) 1. 글자가 이미지 안쪽으로 오도록 패딩 추가 */
+    padding: 30px 40px;
+    box-sizing: border-box; // ⬅️ 패딩 포함
   }
 
   //* 네비게이션 ( < 11월 > ) */
@@ -124,25 +108,27 @@ const CalendarWrapper = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 1em;
-    padding: 0 10%; // ⬅️ 좌우 여백
+    margin-bottom: 0.02em;
+    padding: 0; // ⬅️ 좌우 여백
   }
   .react-calendar__navigation button {
-    background: none;
+    background: none !important;
     border: none;
-    font-size: 1.5em;
-    font-weight: 900;
+    font-size: 1.2em;
+    font-weight: 300;
     color: ${({ theme }) => theme.colors.text};
     cursor: pointer;
+
+    min-width: 30px;
   }
-  .react-calendar__navigation button:hover {
-    color: ${({ theme }) => theme.colors.primary};
-  }
+  // .react-calendar__navigation button:hover {
+  //   color: ${({ theme }) => theme.colors.primary};
+  // }
   .react-calendar__navigation__label {
     flex-grow: 1 !important;
-    font-size: 1.2em;
+    font-size: 1em;
     font-weight: 900;
-    color: ${({ theme }) => theme.colors.text};
+    // color: ${({ theme }) => theme.colors.text};
   }
 
   /* 요일 (일,월,화...) */
@@ -150,13 +136,17 @@ const CalendarWrapper = styled.div`
     text-align: center;
     text-transform: uppercase;
     font-weight: 500;
-    font-size: 0.8em;
-    margin-bottom: 0.5em;
+    font-size: 1em;
+    margin-bottom: 0.3em;
   }
   .react-calendar__month-view__weekdays__weekday {
     padding: 0.5em;
-    text-decoration: none; // ⬅️ 밑줄 제거
-    color: ${({ theme }) => theme.colors.textSecondary}; // ⬅️ 회색 텍스트
+
+    color: black;
+    abbr {
+      text-decoration: none !important; /* ⬅️ 확실하게 !important를 씁니다 */
+      cursor: default; /* (클릭 가능하다는 오해를 막기 위해) */
+    }
   }
   /* 일요일(빨강) */
   .react-calendar__month-view__weekdays__weekday--weekend:first-child {
@@ -171,37 +161,37 @@ const CalendarWrapper = styled.div`
   .react-calendar__tile {
     max-width: 100%;
     text-align: center;
-    padding: 0.5em 0.25em;
+    padding: 0.25em;
     background: none;
     border: none;
     border-radius: 50%;
-    height: 40px; // ⬅️ 높이 강제 (디자인에 맞게 조절)
+    height: 32px; // ⬅️ 높이 강제 (디자인에 맞게 조절)
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.9em;
+    font-size: 0.8em;
     color: ${({ theme }) => theme.colors.text};
   }
 
   /* 오늘 날짜 (시안의 '4') */
   .react-calendar__tile--now {
-    background-color: ${({ theme }) => theme.colors.primary};
-    color: white;
+    background-color: #e1c9b5;
+    color: black;
     font-weight: 900;
   }
 
   /* 선택된 날짜 (오늘과 겹칠 수 있음) */
   .react-calendar__tile--active {
-    background-color: ${({ theme }) => theme.colors.primary} !important;
+    background-color: #7d4519 !important; // ⬅️ !important로 우선순위
     color: white;
     font-weight: 900;
   }
-
-  /* 프로젝트 기간 (기존 로직) */
-  .project-day {
-    &:not(.react-calendar__tile--active):not(.react-calendar__tile--now) {
-      background-color: rgba(202, 136, 83, 0.2); // ⬅️ Primary 색상 투명하게
-    }
+  .react-calendar__tile:hover:not(.react-calendar__tile--active):not(
+      .react-calendar__tile--now
+    ) {
+    background-color: #e1c9b5; /* ⬅️ 요청하신 호버 색상 */
+    color: balck; /* (연한 배경에 어두운 글씨) */
+    cursor: pointer;
   }
 
   /* 주말 날짜 */

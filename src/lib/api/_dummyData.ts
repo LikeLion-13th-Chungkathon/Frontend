@@ -29,7 +29,7 @@ export const DUMMY_PROJECTS: ProjectEvent[] = [
     endDate: "2025-12-5",
     category: "CONFERENCE",
     memberCount: 5,
-    inviteCode: "LIKELIONS-13"
+    inviteCode: "LIKELIONS-13",
   },
 ];
 
@@ -47,7 +47,7 @@ export const DUMMY_NOTES: DailyNote[] = [
   {
     id: "note-today-2",
     date: "2025-11-11", // ⬅️ 오늘 날짜로 수정
-    content: "오늘 날짜의 테스트 노트입니다. 클릭하세요.",
+    content: "오늘 날짜의 노트",
     highlights: [],
     projectId: "proj-1",
     createdAt: new Date().toISOString(),

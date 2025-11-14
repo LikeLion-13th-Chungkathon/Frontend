@@ -73,11 +73,14 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
 
         {/* 진행률 그래프 */}
         <ProgressContainer>
-          <ProgressBar />
+          <ProgressBar>
+            <ProgressFill style={{ width: `${progressPercent}%` }} />
+          </ProgressBar>
           <FlameIconWrapper style={{ left: `${progressPercent}%` }}>
             <img src={FlameIcon} alt="진행률" />
           </FlameIconWrapper>
         </ProgressContainer>
+        <ProgressText>{Math.round(progressPercent)}%</ProgressText>
       </TitleRow>
     </Wrapper>
   );
@@ -114,7 +117,7 @@ const InfoPeriodText = styled.span`
 const InfoRow = styled.div`
   display: flex;
   flex-wrap: wrap; // 혹시 좁아지면 줄바꿈
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 `;
 
 const InfoDDayChip = styled.span`
@@ -127,8 +130,8 @@ const InfoDDayChip = styled.span`
   padding: 5px 11px;
   box-sizing: border-box;
 
-  border-radius: 16px; // ⬅️ 시안보다 둥글게 (유도리)
-  background-color: ${({ theme }) => theme.colors.primary};
+  border-radius: 12px; // ⬅️ 시안보다 둥글게 (유도리)
+  background-color: #7d4519;
   color: white;
 
   font-family: ${({ theme }) => theme.fonts.primary};
@@ -168,7 +171,6 @@ const TitleRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between; // ⬅️ 양쪽으로 분리
-  gap: 16px; // ⬅️ 제목과 바 사이의 최소 간격
   margin-top: 10px;
 `;
 
@@ -177,14 +179,14 @@ const Title = styled.h2`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.fonts.primary};
-  margin: 0; // ⬅️ margin은 부모(TitleRow)가 관리
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-  /* --- ⬇️ ... 처리를 위한 핵심 4줄 --- */
-  flex: 1; /* 1. 남는 공간을 모두 차지 */
-  min-width: 0; /* 2. (중요) flex-item이 줄어들 수 있도록 허용 */
-  white-space: nowrap; /* 3. 줄바꿈 방지 */
-  overflow: hidden; /* 4. 넘치는 내용 숨기기 */
-  text-overflow: ellipsis; /* 5. ... 표시 */
+  margin-right: 16px; // ⬅️ 바(Container)와 간격
 `;
 
 const ProgressContainer = styled.div`
@@ -192,14 +194,32 @@ const ProgressContainer = styled.div`
   display: flex;
   align-items: center;
   height: 28px;
-
   flex-shrink: 0;
-  width: 140px; /* ⬅️ 진행률 바의 '최소/고정' 너비 (디자인에 맞게 조절) */
+  width: 130px;
+`;
+
+const ProgressBar = styled.div`
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 4px solid #ca8853;
+  width: 100%; // ⬅️ 부모(ProgressContainer)의 100%
+  height: 12px; // ⬅️ 시안처럼 조금 더 두껍게
+  border-radius: 20px;
+  background: #dddddd; // ⬅️ 남은 부분(우측)의 색상
+  overflow: hidden; // ⬅️ ProgressFill이 삐져나가지 않게
+`;
+
+const ProgressFill = styled.div`
+  height: 100%;
+  background: linear-gradient(90deg, #f9dcb7 0%, #ca8853 100%);
+  border-radius: 20px;
+  transition: width 0.4s ease-out;
 `;
 
 const FlameIconWrapper = styled.div`
   position: absolute;
-  top: 45%; // ⬅️ 세로 중앙 정렬
+  top: 40%; // ⬅️ 세로 중앙 정렬
   transform: translate(-50%, -50%); // ⬅️ 자신의 중앙 기준으로 정렬
 
   transition: left 0.4s ease-out;
@@ -208,28 +228,22 @@ const FlameIconWrapper = styled.div`
   img {
     width: 28px;
     height: 28px;
+    display: block;
   }
 `;
 
-const ProgressBar = styled.div`
-  position: absolute; // ⬅️ 불꽃 뒤에 깔림
-  top: 50%; // ⬅️ 세로 중앙 정렬
-  transform: translateY(-50%);
+const ProgressText = styled.span`
+  flex-shrink: 0; // ⬅️ 찌그러지지 않게
+  z-index: 1;
 
-  width: 100%;
-  height: 10px;
-  border-radius: 10px;
-  background: linear-gradient(
-    90deg,
-    #f9dcb7 0%,
-    #ca8853 100%
-  ); // ⬅️ 요청하신 그라데이션
-  overflow: hidden;
+  margin-left: 8px; // ⬅️ 바(Container)와 간격
+
+  color: #8b4b03;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 12px;
+  font-weight: 600;
+
+  /* "100%"가 되어도 깨지지 않게 최소 너비 확보 */
+  min-width: 20px;
+  text-align: left;
 `;
-
-// const ProgressFill = styled.div`
-//   height: 100%;
-//   background: linear-gradient(90deg, #f9dcb7 0%, #ca8853 100%);
-//   border-radius: 10px; // ⬅️ radius 맞춤
-//   transition: width 0.4s ease-out;
-// `;
