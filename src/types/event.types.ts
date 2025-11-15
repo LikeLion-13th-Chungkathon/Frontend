@@ -9,3 +9,15 @@ export interface ProjectEvent {
   memberCount: number;
   inviteCode: string;
 }
+
+export type Project = {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+};
+
+export type CreateProjectResponse = {
+  project: Project;
+  inviteCode: string;
+};

@@ -23,3 +23,33 @@ export interface DailyNote {
   createdAt: string;
   updatedAt: string;
 }
+
+// 메모 API 응답 타입 정의
+export interface ApiMemo {
+  id: number;
+  created_at: string;
+  modified_at: string;
+  date: string;
+  contents: string;
+  user: number;
+  project: number;
+}
+
+export interface ApiTagging {
+  id: number;
+  tag_contents: string;
+  offset_start: number;
+  offset_end: number;
+  tag_style: number; // 0: 문제, 1: 아이디어, 2: 해결 (이라고 가정)
+  memo: number;
+}
+
+export interface MemoCreateResponse {
+  results: ApiMemo;
+  log_result?: { success: boolean; message: string };
+}
+
+export interface TaggingCreateResponse {
+  results: ApiTagging;
+  log_result?: { success: boolean; message: string };
+}
