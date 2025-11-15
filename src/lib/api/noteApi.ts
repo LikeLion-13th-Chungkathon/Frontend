@@ -187,3 +187,41 @@ export const useCreateTaggingMutation = (memoId: string) => {
     },
   });
 };
+
+// 하이라이트(태깅) "수정" (PUT /taggings/{tagging_id}/)
+export const useUpdateTaggingMutation = (taggingId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (highlight: Omit<Highlight, "id">) => {
+      const payload = {
+        tag_contents: highlight.text,
+        offset_start: highlight.startIndex,
+        offset_end: highlight.endIndex,
+        tag_style: categoryToTagStyle(highlight.category),
+      };
+      const { data } = await axios.put(`/taggings/${taggingId}/`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    },
+  });
+};
+
+// 하이라이트(태깅) "삭제" (DELETE /taggings/{tagging_id}/)
+
+export const useDeleteTaggingMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, { memoId: string; taggingId: string }>({
+    mutationFn: async ({ taggingId }) => {
+      await axios.delete(`/taggings/${taggingId}/`);
+    },
+    onSuccess: (_, variables) => {
+      // 1. (중요) 'notes' 쿼리 키에 memoId가 포함된 모든 것을 무효화
+      queryClient.invalidateQueries({ queryKey: ["notes", variables.memoId] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] }); // 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ["reviews"] }); // 리뷰 갱신
+    },
+  });
+};

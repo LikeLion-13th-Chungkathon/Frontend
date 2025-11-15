@@ -5,6 +5,7 @@ import {
   useNoteByIdQuery,
   useUpdateMemoMutation, // ⬅️ "텍스트" 수정용
   useCreateTaggingMutation, // ⬅️ "하이라이트" 생성용
+  useDeleteTaggingMutation, // ⬅️  삭제 훅
 } from "../../../lib/api/noteApi";
 import type {
   Highlight,
@@ -35,61 +36,96 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   // noteId에 대한 "수정" 뮤테이션 준비
   const updateMemoMutation = useUpdateMemoMutation(noteId!);
   const createTaggingMutation = useCreateTaggingMutation(noteId!);
+  const deleteTaggingMutation = useDeleteTaggingMutation(); // 삭제 훅 준비
 
   const { activeCategory, actions: editorActions } = useEditorStore();
 
   // 로컬 상태 (기본값을 빈 값으로)
   const [content, setContent] = useState("");
-  const [highlights, setHighlights] = useState<Omit<Highlight, "id">[]>([]);
+  const [localHighlights, setLocalHighlights] = useState<
+    (Highlight | Omit<Highlight, "id">)[]
+  >([]);
 
   // noteData가 로드되면 'content'만 동기화
   useEffect(() => {
     if (noteData) {
       setContent(noteData.content);
-      setHighlights(noteData.highlights.map(({ id, ...rest }) => rest));
+      setLocalHighlights(noteData.highlights); // API 원본 하이라이트 채우기
     } else {
+      // 모달이 닫히거나 noteId가 바뀌면 초기화
       setContent("");
-      setHighlights([]);
+      setLocalHighlights([]);
     }
   }, [noteData, noteId]);
 
-  // 버튼 핸들러 (handleSubmit)
-  // 6. (수정) handleSubmit - 이제 "텍스트 저장"만 담당
+  //  handleSubmit - 텍스트와 하이라이트 변경사항을 "한꺼번에" 전송
   const handleSubmit = async () => {
     if (!noteId || !noteData) return;
-    // (참고) noteApi.ts의 useUpdateMemoMutation는 원본 'memo' 객체를 필요로 합니다.
-    // A. 텍스트가 변경되었는지 확인하고, 변경되었으면 텍스트 수정 API 호출
-    const isContentChanged = noteData.content !== content;
-    if (isContentChanged) {
-      await updateMemoMutation.mutateAsync({
-        content: content,
-        memo: noteData,
-      });
-    }
-
-    // B. 하이라이트 API 호출 (Promise.all로 병렬 처리)
-    // (참고: 기존 태깅을 모두 지우고 새로 생성하는 로직이 더 안전할 수 있음)
-    // 여기서는 로컬 상태(highlights) 기준으로 생성 API만 호출
     try {
+      // A. 텍스트 수정 (필요한 경우)
+      const isContentChanged = noteData.content !== content;
+      if (isContentChanged) {
+        await updateMemoMutation.mutateAsync({
+          content: content,
+          memo: noteData,
+        });
+      }
+
+      // B. (오류 2 해결) 하이라이트 변경사항 계산 (삭제/추가)
+      const originalIds = new Set(noteData.highlights.map((h) => h.id));
+      const localIdsWithId = new Set(
+        localHighlights
+          .filter((h): h is Highlight => "id" in h)
+          .map((h) => h.id)
+      );
+
+      // (삭제) 원본에 있었는데, 로컬에 없는 ID 찾기
+      const idsToDelete = [...originalIds].filter(
+        (id) => !localIdsWithId.has(id)
+      );
+
+      // (생성) 로컬에 있는데, 'id'가 없는 (신규) 하이라이트 찾기
+      const highlightsToCreate = localHighlights.filter(
+        (h): h is Omit<Highlight, "id"> => !("id" in h)
+      );
+
+      // C. 삭제 API 호출 (병렬)
       await Promise.all(
-        highlights.map((hl) => createTaggingMutation.mutateAsync(hl))
+        idsToDelete.map((taggingId) =>
+          deleteTaggingMutation.mutateAsync({
+            memoId: noteId,
+            taggingId: String(taggingId),
+          })
+        )
+      );
+
+      // D. 생성 API 호출 (병렬)
+      await Promise.all(
+        highlightsToCreate.map((hl) => createTaggingMutation.mutateAsync(hl))
       );
     } catch (err) {
-      console.error("하이라이트 저장 중 오류:", err);
-      // (에러 처리)
+      console.error("저장 중 오류:", err);
+      alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      // (수정) 성공/실패 여부와 관계없이 모달을 닫고 캐시 무효화
+      // (onSuccess는 mutateAsync에서 사용할 수 없으므로 finally로 이동)
+      queryClient.invalidateQueries({ queryKey: ["notes", noteId] });
+      queryClient.invalidateQueries({
+        queryKey: ["notes", noteData.projectId, noteData.date],
+      });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      onClose();
     }
-
-    onClose(); // 모든 작업 완료 후 모달 닫기
   };
 
-  // 텍스트 하이라이트 로직 (onSelect 이벤트)
-  // 덮어쓰기 로직 추가
+  // 7. (수정) handleTextSelect - 로컬 상태만 변경 (Problem 1, 2, 3 해결)
   const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = e.currentTarget;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
 
-    // 선택된 카테고리가 있고 & 텍스트가 실제로 드래그 되었다면
+    // (Problem 2 해결) 역방향 드래그 처리
+    const start = Math.min(textarea.selectionStart, textarea.selectionEnd);
+    const end = Math.max(textarea.selectionStart, textarea.selectionEnd);
+
     if (activeCategory && start !== end) {
       const newHighlight: Omit<Highlight, "id"> = {
         category: activeCategory,
@@ -98,13 +134,12 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         text: content.slice(start, end),
       };
 
-      // (수정) API 즉시 호출 대신, 로컬 상태(highlights)를 업데이트
-      setHighlights((prevHighlights) => {
-        // (문제 3 해결) 새 하이라이트와 겹치는 기존 하이라이트를 필터링
+      // (Problem 1 해결) API 즉시 호출 대신, 로컬 상태(localHighlights)를 업데이트
+      setLocalHighlights((prevHighlights) => {
+        // (Problem 3 해결) 겹치는 영역 덮어쓰기
         const filteredHighlights = prevHighlights.filter(
           (hl) => hl.startIndex >= end || hl.endIndex <= start // 겹치지 않는 것만 남김
         );
-        // 필터링된 목록에 새 하이라이트 추가
         return [...filteredHighlights, newHighlight];
       });
 
@@ -156,7 +191,9 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
   // disabeld 로직 변경
   const isMutating =
-    updateMemoMutation.isPending || createTaggingMutation.isPending;
+    updateMemoMutation.isPending ||
+    createTaggingMutation.isPending ||
+    deleteTaggingMutation.isPending;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width={335}>
@@ -201,7 +238,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         {/*에디터 래퍼 스타일*/}
         <EditorWrapper>
           {/* 렌더러가 로컬 highlights 상태를 바라보도록 수정 */}
-          <HighlightRenderer content={content} highlights={highlights} />
+          <HighlightRenderer content={content} highlights={localHighlights} />
           <NoteEditor
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -218,7 +255,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
             onClick={handleSubmit}
             disabled={isMutating} // 로딩/저장 중 클릭 방지
           >
-            {updateMemoMutation.isPending ? "저장 중..." : "완료"}
+            {isMutating ? "저장 중..." : "완료"}
           </SubmitButton>
         </Footer>
       </ContentContainer>
@@ -241,7 +278,7 @@ const HighlightRenderer = ({
   highlights,
 }: {
   content: string;
-  highlights: Omit<Highlight, "id">[];
+  highlights: (Highlight | Omit<Highlight, "id">)[];
 }) => {
   // 하이라이트 시작 인덱스(startIndex) 기준으로 정렬
   const sortedHighlights = [...highlights].sort(
