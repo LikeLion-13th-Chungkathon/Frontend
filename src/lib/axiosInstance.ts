@@ -1,5 +1,6 @@
 // src/lib/axiosInstance.ts
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
+import useAuthStore from "../store/useAuthStore";
 
 // axios 기본 인스턴스 생성
 const axiosInstance = axios.create({
@@ -14,8 +15,23 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+
+    // 토큰을 붙이지 않을 URL (로그인/회원가입/구글 콜백)
+    const skipAuth =
+      config.url?.startsWith("/auth/login") ||
+      config.url?.startsWith("/auth/signup") ||
+      config.url?.startsWith("/account/google/callback/") ||
+      config.url?.startsWith("/account/google/signup/");
+
+    if (token && !skipAuth) {
+      if (!config.headers) {
+        config.headers = new AxiosHeaders();
+      }
+
+      (config.headers as AxiosHeaders).set(
+        "Authorization",
+        `Bearer ${token}`
+      );
     }
     return config;
   },
@@ -26,10 +42,24 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      console.warn("인증 만료됨. 다시 로그인 필요");
-      // TODO: refresh token 로직 or logout 처리
+    const status = error.response?.status;
+
+    if (status === 401) {
+      console.warn("인증 만료됨. 다시 로그인 필요", error.response?.data);
+
+      // 1) 로컬 토큰 제거
+      localStorage.removeItem("accessToken");
+
+      // 2) Zustand 상태 초기화
+      const { logout } = useAuthStore.getState();
+      logout(); // user=null, status="UNAUTHENTICATED", pendingGoogleUser=null
+
+      // 3) 로그인 페이지로 강제 이동
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
+
     return Promise.reject(error);
   }
 );
