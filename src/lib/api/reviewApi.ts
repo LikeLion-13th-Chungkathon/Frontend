@@ -62,6 +62,8 @@ export const useReviewsQuery = (projectId: string | null) => {
 
       const houseData = houseRes.data;
       const taggingsData = taggingsRes.data;
+      console.log(houseData);
+      console.log(taggingsData);
 
       // ApiProjectHouse -> TeamProgress (앱 타입)로 변환
       const teamProgress: TeamProgress = {

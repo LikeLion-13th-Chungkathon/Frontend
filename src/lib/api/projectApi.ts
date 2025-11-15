@@ -48,6 +48,7 @@ export const useProjectsQuery = () =>
     queryFn: async () => {
       const { data } = await axios.get<{ results: ApiProject[] }>("/projects/");
       // UI 호환을 위한 snake_case => camelCase 매핑
+      console.log(data);
       return data.results.map((project) => ({
         id: String(project.id),
         title: project.project_name,
@@ -68,6 +69,7 @@ export const useCreateProjectMutation = () => {
   return useMutation({
     mutationFn: async (payload: CreateProjectPayload) => {
       const { data } = await axios.post<ApiProject>("/projects", payload);
+      console.log(data);
       return {
         project: {
           id: String(data.id),
@@ -97,6 +99,7 @@ export const useJoinProjectMutation = () => {
         "/projects/invite/",
         payload
       );
+      console.log(data);
       return data;
     },
     onSuccess: () => {
