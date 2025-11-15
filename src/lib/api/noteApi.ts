@@ -1,148 +1,189 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import type {
   DailyNote,
+  Highlight, // ⬅️ (추가) HighlightRenderer를 위해
   CreateTextNoteDTO,
-  UpdateNoteDTO,
-  UpdateNoteResponse,
+  ApiMemo, // ⬅️ (추가) 타입 분리
+  ApiTagging, // ⬅️ (추가) 타입 분리
+  MemoCreateResponse, // ⬅️ (추가) 타입 분리
+  TaggingCreateResponse, // ⬅️ (추가) 타입 분리
 } from "../../types";
-import { fakeFetch } from "./projectApi";
-import { DUMMY_NOTES } from "./_dummyData";
+
+//Api 응답 타입 요청
+
 import { useModalActions } from "../../store/useModalStore";
+import axios from "../axiosInstance";
+import { tagStyleToCategory, categoryToTagStyle } from "../utils/tagHelpers";
 
-// 노트 완료 버튼 생성 및 수정 API
-
-// (가짜 API 함수)
-// 더미 데이터 응답
-const createTextNote = async (
-  noteData: CreateTextNoteDTO
-): Promise<DailyNote> => {
-  // const { data } = await myAxios.post('/notes', noteData);
-  console.log("API: 텍스트 노트 생성", noteData);
-  const data: DailyNote = {
-    // 더미데이터
-    id: `note-${Math.random()}`, // 임시 ID
-    date: new Date().toISOString().split("T")[0],
-    content: noteData.content,
-    highlights: [], // ⬅️ 처음 생성 시 하이라이트는 비어있음
-    projectId: noteData.projectId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  return new Promise((res) => setTimeout(() => res(data), 500));
-};
-
-const updateNote = async ({
-  noteId,
-  noteData,
-}: {
-  noteId: string;
-  noteData: UpdateNoteDTO;
-}): Promise<UpdateNoteResponse> => {
-  // const { data } = await myAxios.patch(`/notes/${noteId}`, noteData);
-  console.log("API: 노트 하이라이트 수정", noteId, noteData);
-  const data: UpdateNoteResponse = {
-    updatedNote: {
-      // 더미데이터
-      id: noteId,
-      date: new Date().toISOString().split("T")[0],
-      content: noteData.content,
-      highlights: noteData.highlights.map((h, i) => ({
-        ...h,
-        id: `hl-${i + 1}`, // (백엔드가 ID를 생성해줬다고 가정)
-      })),
-      projectId: "proj-1", // (임시 프로젝트 ID)
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+// 특정 날짜의 모든 노트(Memo) 조회 (GET/memos) 하이라이트 포함x
+export const useNotesByDateQuery = (projectId: string | null, date: string) => {
+  return useQuery<DailyNote[]>({
+    queryKey: ["notes", projectId, date], // 날짜별로 캐싱
+    queryFn: async () => {
+      const { data } = await axios.get<{ results: ApiMemo[] }>("/memos", {
+        params: { project_id: projectId, date },
+      });
+      console.log(data);
+      // Apimemo -> DailyNote 용으로 변환
+      return data.results.map((memo) => ({
+        id: String(memo.id),
+        date: memo.date,
+        content: memo.contents,
+        projectId: String(memo.project),
+        createdAt: memo.created_at,
+        updatedAt: memo.modified_at,
+        highlights: [], // ⬅️ 목록에서는 하이라이트 미포함
+      }));
     },
-    isFirstContribution: Math.random() < 0.5, // ⬅️ 통나무 모달 50% 확률
-  };
-  return new Promise((res) => setTimeout(() => res(data), 1000));
+    enabled: !!projectId,
+  });
 };
 
-const fetchNoteById = async (noteId: string): Promise<DailyNote> => {
-  console.log("API: 노트 상세 조회", noteId);
-
-  // 더미데이터에서 noteId 일치하는 노트 찾기
-  const foundNote = DUMMY_NOTES.find((note) => note.id === noteId);
-
-  if (!foundNote) {
-    console.warn(
-      `노트(ID: ${noteId})를 찾을 수 없습니다. 기본 노트를 반환합니다.`
-    );
-    return DUMMY_NOTES[0];
-  }
-
-  const data: DailyNote = foundNote;
-
-  return new Promise((res) => setTimeout(() => res(data), 500));
-};
-
-// 텍스트 전용 노트 생성 뮤테이션 (데일리 기록 추가 뮤테이션)
+// 텍스트 전용 노트 생성 뮤테이션 (POST/memos/)
 export const useCreateTextNoteMutation = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: createTextNote,
-    onSuccess: () => {
-      // 텍스트 생성 성공 시, 홈의 노트 목록을 갱신
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-};
-
-// 특정 ID의 노트 상세 정보를 가져오는 쿼리 (모달용)
-export const useNoteByIdQuery = (noteId: string) => {
-  return useQuery<DailyNote>({
-    queryKey: ["notes", noteId], // ⬅️ ['notes', 'note-123']
-    queryFn: () => fetchNoteById(noteId),
-    staleTime: 1000 * 60, // 1분간 캐시
-  });
-};
-
-// 노트 수정(하이라이팅) 뮤테이션
-export const useUpdateNoteMutation = (noteId: string) => {
-  const queryClient = useQueryClient();
-  // 통나무 모달 열기 액션
   const { openLogAcquiredModal } = useModalActions();
 
   return useMutation({
-    mutationFn: (noteData: UpdateNoteDTO) => updateNote({ noteId, noteData }),
+    mutationFn: async (noteData: CreateTextNoteDTO) => {
+      const payload = {
+        project: Number(noteData.projectId),
+        contents: noteData.content,
+        date: new Date().toISOString().split("T")[0], // 오늘 날짜 추가
+      };
+      const { data } = await axios.post<MemoCreateResponse>("/memos/", payload);
+      console.log(data);
+      return data;
+    },
     onSuccess: (data) => {
-      // 1. "첫 기여"면 통나무 모달 띄우기
-      if (data.isFirstContribution) {
-        // (참고: "이 프로젝트" 부분은 나중에 프로젝트 이름을
-        //  zustand나 props로 받아와서 채워야 합니다.)
+      // 텍스트 생성 성공 시, 홈의 노트 목록을 갱신
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      if (data.log_result?.success) {
+        openLogAcquiredModal("이 프로젝트");
+      }
+    },
+  });
+};
+
+type NoteByIdQueryKey = readonly (string | null)[];
+// React Query 옵션 타입을 정의
+type UseNoteByIdQueryOptions = Omit<
+  UseQueryOptions<DailyNote, Error, DailyNote, NoteByIdQueryKey>,
+  "queryKey" | "queryFn"
+>;
+
+// 특정 ID의 노트 상세 정보를 가져오는 쿼리 (모달용)
+// (GET /memos/{id} + GET /taggings/memo/{id})
+export const useNoteByIdQuery = (
+  noteId: string | null,
+  options?: UseNoteByIdQueryOptions
+) => {
+  return useQuery<DailyNote, Error, DailyNote, NoteByIdQueryKey>({
+    queryKey: ["notes", noteId], // ⬅️ ['notes', 'note-123']
+    queryFn: async () => {
+      // api 병렬호출
+      const [memoRes, taggingRes] = await Promise.all([
+        axios.get<{ results: ApiMemo }>(`/memos/${noteId}/`),
+        axios.get<{ results: ApiTagging[] }>(`/tagging/memo/${noteId}/`),
+      ]);
+
+      const memo = memoRes.data.results;
+      const taggings = taggingRes.data.results;
+      console.log(memo);
+      console.log(taggings);
+
+      // api 두개 -> DailyNote 1개로 조합
+      const highlights: Highlight[] = taggings.map((tag) => ({
+        id: String(tag.id),
+        category: tagStyleToCategory(tag.tag_style),
+        startIndex: tag.offset_start,
+        endIndex: tag.offset_end,
+        text: tag.tag_contents,
+      }));
+
+      return {
+        id: String(memo.id),
+        date: memo.date,
+        content: memo.contents,
+        projectId: String(memo.project),
+        createdAt: memo.created_at,
+        updatedAt: memo.modified_at,
+        highlights: highlights,
+      };
+    },
+    enabled: !!noteId,
+    staleTime: 1000 * 60,
+    ...options,
+  });
+};
+
+// 노트 수정(하이라이팅) 뮤테이션 두개
+
+// 노트 텍스트 수정 (PUT /memos/{id})
+// (NoteDetailModal에서 텍스트가 변경되었을 때 호출)
+export const useUpdateMemoMutation = (noteId: string) => {
+  const queryClient = useQueryClient();
+  // (참고: PUT은 전체 객체를 보내야 해서,
+  //  fetchNoteById로 원본을 받아와서 content만 바꾸는 게 안전합니다.)
+  return useMutation({
+    mutationFn: async (payload: { content: string; memo: DailyNote }) => {
+      const apiPayload = {
+        project: Number(payload.memo.projectId),
+        date: payload.memo.date,
+        contents: payload.content, // ⬅️ 변경된 텍스트
+      };
+      const { data } = await axios.put<ApiMemo>(
+        `/memos/${noteId}/`,
+        apiPayload
+      );
+      console.log(data);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      // 텍스트 수정 성공 시 관련 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ["notes", noteId] });
+      queryClient.invalidateQueries({
+        queryKey: ["notes", variables.memo.projectId, variables.memo.date],
+      });
+    },
+  });
+};
+
+// 하이라이트(태깅) 생성(POST /taggings/memo/{id})
+// (NoteDetailModal에서 하이라이트가 추가될 때마다 호출)
+export const useCreateTaggingMutation = (memoId: string) => {
+  const queryClient = useQueryClient();
+  const { openLogAcquiredModal } = useModalActions();
+
+  return useMutation({
+    mutationFn: async (highlight: Omit<Highlight, "id">) => {
+      const payload = {
+        tag_contents: highlight.text,
+        offset_start: highlight.startIndex,
+        offset_end: highlight.endIndex,
+        tag_style: categoryToTagStyle(highlight.category),
+      };
+      const { data } = await axios.post<TaggingCreateResponse>(
+        `/taggings/memo/${memoId}/`,
+        payload
+      );
+      console.log(data);
+      return data;
+    },
+    onSuccess: (data) => {
+      // (수정) "통나무 획득" 로직은 여기! (Swagger 기준)
+      if (data.log_result?.success) {
         openLogAcquiredModal("이 프로젝트");
       }
 
-      // 2. 홈 노트 목록 갱신
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      // 3. 리뷰 페이지 갱신
+      // 태깅 성공 시 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ["notes", memoId] });
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      // 4. (중요) 이 노트의 상세 캐시도 갱신
-      queryClient.setQueryData(["notes", noteId], data.updatedNote);
     },
   });
 };
-
-// 특정 날짜의 모든 노트를 가져오는 훅
-export const useNotesByDateQuery = (date: string) => {
-  return useQuery<DailyNote[]>({
-    queryKey: ["notes", date], // 날짜별로 캐싱
-    queryFn: async () => {
-      const allNotes = await fakeFetch(DUMMY_NOTES);
-      return allNotes.filter((note) => note.date === date);
-    },
-  });
-};
-
-// {
-//       id: "note-new-123",
-//       date: new Date().toISOString().split("T")[0],
-//       content: noteData.content,
-//       highlights: noteData.highlights.map((h, i) => ({
-//         ...h,
-//         id: `hl-new-${i}`,
-//       })),
-//       createdAt: new Date().toISOString(),
-//       updatedAt: new Date().toISOString(),
-//     },

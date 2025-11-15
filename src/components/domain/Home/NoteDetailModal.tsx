@@ -3,7 +3,8 @@ import styled from "styled-components";
 import { useEditorStore } from "../../../store/useEditorStore";
 import {
   useNoteByIdQuery,
-  useUpdateNoteMutation,
+  useUpdateMemoMutation, // ⬅️ "텍스트" 수정용
+  useCreateTaggingMutation, // ⬅️ "하이라이트" 생성용
 } from "../../../lib/api/noteApi";
 import type { Highlight, HighlightCategory } from "../../../types";
 import { X } from "lucide-react";
@@ -11,7 +12,7 @@ import Modal from "../../common/Modal";
 
 interface NoteDetailModalProps {
   isOpen: boolean;
-  noteId: string; //어떤 노트를 열지 ID를 받음
+  noteId: string | null; //어떤 노트를 열지 ID를 받음
   onClose: () => void; //모달을 닫는 함수를 받음
 }
 
@@ -19,45 +20,49 @@ interface NoteDetailModalProps {
 const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   // noteId로 노트 데이터를 "조회"
   const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
-    noteId! // enable 제어
+    noteId,
+    {
+      enabled: isOpen && !!noteId,
+    }
   );
 
   // noteId에 대한 "수정" 뮤테이션 준비
-  const updateNoteMutation = useUpdateNoteMutation(noteId!);
+  const updateMemoMutation = useUpdateMemoMutation(noteId!);
+  const createTaggingMutation = useCreateTaggingMutation(noteId!);
 
   const { activeCategory, actions: editorActions } = useEditorStore();
 
   // 로컬 상태 (기본값을 빈 값으로)
   const [content, setContent] = useState("");
-  const [highlights, setHighlights] = useState<Omit<Highlight, "id">[]>([]);
+  const highlights = noteData?.highlights || [];
 
-  //  React Query가 데이터를 "불러오면" 로컬 상태에 세팅
+  // noteData가 로드되면 'content'만 동기화
   useEffect(() => {
     if (noteData) {
       setContent(noteData.content);
-      setHighlights(noteData.highlights);
     } else {
       setContent("");
-      setHighlights([]);
     }
-  }, [noteData, noteId]); // ⬅️ noteData가 변경될 때만 실행
+  }, [noteData, noteId]);
 
   // 버튼 핸들러 (handleSubmit)
+  // 6. (수정) handleSubmit - 이제 "텍스트 저장"만 담당
   const handleSubmit = () => {
-    if (!noteId) return; // noteId가 없으면 중단
-
-    updateNoteMutation.mutate(
+    if (!noteId || !noteData) return;
+    // (참고) noteApi.ts의 useUpdateMemoMutation는 원본 'memo' 객체를 필요로 합니다.
+    updateMemoMutation.mutate(
       {
         content: content,
-        highlights: highlights,
+        memo: noteData, // ⬅️ 원본 noteData 전달
       },
       {
         onSuccess: () => {
-          onClose(); // ⬅️ 저장 성공 시 모달 닫기
+          onClose(); // 저장 성공 시 모달 닫기
         },
       }
     );
   };
+
   // 텍스트 하이라이트 로직 (onSelect 이벤트)
   const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = e.currentTarget;
@@ -73,8 +78,10 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         text: content.slice(start, end),
       };
 
-      // 하이트라이트 추가 및 카테고리 선택 해제
-      setHighlights((prev) => [...prev, newHighlight]);
+      createTaggingMutation.mutate(newHighlight);
+      // (이 훅의 onSuccess가 캐시를 갱신하면, noteData.highlights가
+      //  바뀌고 화면이 자동으로 리렌더링됩니다.)
+
       editorActions.setActiveCategory(null);
     }
   };
@@ -96,13 +103,19 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
     return { datePart, timePart }; // ⬅️ 객체로 반환
   }, [noteData]);
 
-  if (isLoadingNote) {
+  if (isLoadingNote && !noteData) {
     return (
-      <PageWrapper>
-        <div>노트 불러오는 중...</div>
-      </PageWrapper>
+      <Modal isOpen={isOpen} onClose={onClose} width={335}>
+        <ContentContainer>
+          <div>노트 불러오는 중...</div>
+        </ContentContainer>
+      </Modal>
     );
   }
+
+  // disabeld 로직 변경
+  const isMutating =
+    updateMemoMutation.isPending || createTaggingMutation.isPending;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width={335}>
@@ -110,9 +123,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         <X size={24} />
       </CloseButton>
       <ContentContainer>
-        <Header>
-          {/* 프로젝트 제목 */}[{noteData?.projectId || "프로젝트"}]
-        </Header>
+        <Header>[{noteData?.projectId || "프로젝트"}]</Header>
         <Header>
           {/* 1. 날짜 부분 (기본 Header 스타일) */}
           {formattedTime.datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
@@ -148,14 +159,14 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
         {/*에디터 래퍼 스타일*/}
         <EditorWrapper>
+          {/*  highlights는 이제 noteData.highlights에서 옴 */}
           <HighlightRenderer content={content} highlights={highlights} />
           <NoteEditor
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onSelect={handleTextSelect}
             spellCheck="false"
-            // (로딩 중일 때 입력 방지)
-            disabled={isLoadingNote || updateNoteMutation.isPending}
+            disabled={isMutating} // ⬅️ 로딩/저장 중 입력 방지
           />
         </EditorWrapper>
 
@@ -164,9 +175,9 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           <CancelButton onClick={onClose}>취소</CancelButton>
           <SubmitButton
             onClick={handleSubmit}
-            disabled={updateNoteMutation.isPending}
+            disabled={isMutating} // 로딩/저장 중 클릭 방지
           >
-            {updateNoteMutation.isPending ? "저장 중..." : "완료"}
+            {updateMemoMutation.isPending ? "저장 중..." : "완료"}
           </SubmitButton>
         </Footer>
       </ContentContainer>
@@ -189,7 +200,7 @@ const HighlightRenderer = ({
   highlights,
 }: {
   content: string;
-  highlights: Omit<Highlight, "id">[];
+  highlights: Highlight[]; // Omit 제거
 }) => {
   // 하이라이트 시작 인덱스(startIndex) 기준으로 정렬
   const sortedHighlights = [...highlights].sort(
@@ -287,18 +298,18 @@ const HighlightMark = styled.mark<{ category: HighlightCategory }>`
   border-radius: 3px;
 `;
 
-const PageWrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-`;
+// const PageWrapper = styled.div`
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   width: 100%;
+//   height: 100%;
+//   background-color: rgba(0, 0, 0, 0.4);
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   z-index: 100;
+// `;
 
 const TagButtons = styled.div`
   display: flex;

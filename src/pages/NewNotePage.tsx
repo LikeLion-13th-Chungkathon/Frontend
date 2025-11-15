@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import useCalendarStore, {
@@ -12,8 +12,9 @@ import ProjectSelector from "../components/domain/Home/ProjectSelector";
 import ProjectInfo from "../components/domain/Home/ProjectInfo";
 import { useProjectsQuery } from "../lib/api/projectApi";
 import { Button } from "../components/common/Button";
+import { useModalActions } from "../store/useModalStore";
 
-const NewNotePage: React.FC = () => {
+const NewNotePage = () => {
   const navigate = useNavigate();
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
   const selectedDate = useCalendarStore((state) => state.selectedDate);
@@ -24,6 +25,9 @@ const NewNotePage: React.FC = () => {
   const { data: projects } = useProjectsQuery();
 
   const { setActiveProjectId, setSelectedDate } = useCalendarActions();
+
+  // 모달 열기 함수 추가
+  const { openLogAcquiredModal } = useModalActions();
 
   // 3. 앱 로드 시, 첫 번째 프로젝트를 활성 프로젝트로 자동 설정합니다.
   useEffect(() => {
@@ -50,6 +54,19 @@ const NewNotePage: React.FC = () => {
       { projectId: activeProjectId, content },
       {
         onSuccess: () => {
+          const STORAGE_KEY = "logAcquiredModalShownDate_Create"; // (수정용 키와 다르게 설정)
+          const today = new Date().toISOString().split("T")[0];
+          const lastShownDate = localStorage.getItem(STORAGE_KEY);
+
+          if (lastShownDate !== today) {
+            // 오늘 처음 생성한 것이라면
+            localStorage.setItem(STORAGE_KEY, today); // 오늘 날짜 저장
+
+            // activeProject가 있으면 그 이름을 사용, 없으면 기본값
+            const projectName = activeProject?.title || "이 프로젝트";
+            openLogAcquiredModal(projectName);
+          }
+
           navigate("/home"); // 저장 후 홈으로
         },
       }

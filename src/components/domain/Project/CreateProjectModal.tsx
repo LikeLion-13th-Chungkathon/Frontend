@@ -68,21 +68,18 @@ export default function CreateProjectModal({
           {role === "leader" ? (
             <LeaderForm
               onSubmit={async ({ title, startDate, endDate }) => {
+                // 폼 데이터(title)를 API 페이로드(project_name)로 매핑
+                const apiPayload = {
+                  project_name: title,
+                  date_start: startDate,
+                  date_end: endDate,
+                };
+
                 const { project, inviteCode } =
-                  await createMutation.mutateAsync({
-                    title,
-                    startDate,
-                    endDate,
-                  });
+                  await createMutation.mutateAsync(apiPayload); // ⬅️ 매핑된 객체 전달
 
                 setActiveProjectId(project.id);
-
-                // TODO: 실제 API 연동해서 inviteCode 받아오면 여기 채우기
-                const generatedCode = "LIKELION-LOG";
-                setInviteCode(generatedCode);
-
-                // invite 단계(초대코드 화면)로 전환
-                setInviteCode(inviteCode);
+                setInviteCode(inviteCode); // ⬅️ (수정) 응답으로 받은 inviteCode 사용
                 setStep("invite");
               }}
               onClose={onClose}

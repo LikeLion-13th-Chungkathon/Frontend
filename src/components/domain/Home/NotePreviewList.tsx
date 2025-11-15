@@ -68,9 +68,14 @@ interface NotePreviewListProps {
 const NotePreviewList = ({ onNoteClick }: NotePreviewListProps) => {
   // zustand에서 선택된 날짜 가져오기
   const selectedDate = useCalendarStore((state) => state.selectedDate);
+  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
 
   // 리액트 쿼리 훅에 '선택된 날짜' 전달해주고 데이터 가져오기
-  const { data: notes, isLoading, isError } = useNotesByDateQuery(selectedDate);
+  const {
+    data: notes,
+    isLoading,
+    isError,
+  } = useNotesByDateQuery(activeProjectId, selectedDate);
 
   // 로딩 에러 데이터 없는 경우 처리
   const renderContent = () => {
