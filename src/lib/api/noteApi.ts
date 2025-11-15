@@ -25,7 +25,7 @@ export const useNotesByDateQuery = (projectId: string | null, date: string) => {
   return useQuery<DailyNote[]>({
     queryKey: ["notes", projectId, date], // 날짜별로 캐싱
     queryFn: async () => {
-      const { data } = await axios.get<{ results: ApiMemo[] }>("/memos", {
+      const { data } = await axios.get<{ results: ApiMemo[] }>("/memos/", {
         params: { project_id: projectId, date },
       });
       console.log(data);

@@ -68,7 +68,7 @@ export const useCreateProjectMutation = () => {
 
   return useMutation({
     mutationFn: async (payload: CreateProjectPayload) => {
-      const { data } = await axios.post<ApiProject>("/projects", payload);
+      const { data } = await axios.post<ApiProject>("/projects/", payload);
       console.log(data);
       return {
         project: {
