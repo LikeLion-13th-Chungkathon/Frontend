@@ -56,6 +56,24 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
   const dDay = calculateDday(project.endDate);
   const progressPercent = calculateProgress(project.startDate, project.endDate);
 
+  // 1. InviteCodeView의 복사 로직을 가져옵니다.
+  const handleTitleClick = async () => {
+    // 2. project.inviteCode가 있는지 확인합니다.
+    if (!project.inviteCode) {
+      alert("초대 코드가 없습니다.");
+      return;
+    }
+
+    try {
+      // 3. 클립보드에 초대 코드를 복사합니다.
+      await navigator.clipboard.writeText(project.inviteCode);
+      alert(`초대 코드가 복사되었습니다!\n\n${project.inviteCode}`);
+    } catch (err) {
+      console.error("클립보드 복사 실패:", err);
+      alert("초대 코드 복사에 실패했습니다.");
+    }
+  };
+
   return (
     <Wrapper>
       {/* 1. 상단 정보 (기간, D-day, 인원) */}
@@ -69,7 +87,7 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
 
       <TitleRow>
         {/* 프로젝트 제목 (이제 ... 처리가 됨) */}
-        <Title>{project.title}</Title>
+        <Title onClick={handleTitleClick}>{project.title}</Title>
 
         {/* 진행률 그래프 */}
         <ProgressContainer>
@@ -185,6 +203,7 @@ const Title = styled.h2`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 
   margin-right: 16px; // ⬅️ 바(Container)와 간격
 `;

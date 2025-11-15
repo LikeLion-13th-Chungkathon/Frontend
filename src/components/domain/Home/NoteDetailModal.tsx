@@ -6,9 +6,14 @@ import {
   useUpdateMemoMutation, // ⬅️ "텍스트" 수정용
   useCreateTaggingMutation, // ⬅️ "하이라이트" 생성용
 } from "../../../lib/api/noteApi";
-import type { Highlight, HighlightCategory } from "../../../types";
+import type {
+  Highlight,
+  HighlightCategory,
+  ProjectEvent,
+} from "../../../types";
 import { X } from "lucide-react";
 import Modal from "../../common/Modal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NoteDetailModalProps {
   isOpen: boolean;
@@ -18,6 +23,7 @@ interface NoteDetailModalProps {
 
 // 노트 페이지
 const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
+  const queryClient = useQueryClient();
   // noteId로 노트 데이터를 "조회"
   const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
     noteId,
@@ -34,36 +40,50 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
   // 로컬 상태 (기본값을 빈 값으로)
   const [content, setContent] = useState("");
-  const highlights = noteData?.highlights || [];
+  const [highlights, setHighlights] = useState<Omit<Highlight, "id">[]>([]);
 
   // noteData가 로드되면 'content'만 동기화
   useEffect(() => {
     if (noteData) {
       setContent(noteData.content);
+      setHighlights(noteData.highlights.map(({ id, ...rest }) => rest));
     } else {
       setContent("");
+      setHighlights([]);
     }
   }, [noteData, noteId]);
 
   // 버튼 핸들러 (handleSubmit)
   // 6. (수정) handleSubmit - 이제 "텍스트 저장"만 담당
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!noteId || !noteData) return;
     // (참고) noteApi.ts의 useUpdateMemoMutation는 원본 'memo' 객체를 필요로 합니다.
-    updateMemoMutation.mutate(
-      {
+    // A. 텍스트가 변경되었는지 확인하고, 변경되었으면 텍스트 수정 API 호출
+    const isContentChanged = noteData.content !== content;
+    if (isContentChanged) {
+      await updateMemoMutation.mutateAsync({
         content: content,
-        memo: noteData, // ⬅️ 원본 noteData 전달
-      },
-      {
-        onSuccess: () => {
-          onClose(); // 저장 성공 시 모달 닫기
-        },
-      }
-    );
+        memo: noteData,
+      });
+    }
+
+    // B. 하이라이트 API 호출 (Promise.all로 병렬 처리)
+    // (참고: 기존 태깅을 모두 지우고 새로 생성하는 로직이 더 안전할 수 있음)
+    // 여기서는 로컬 상태(highlights) 기준으로 생성 API만 호출
+    try {
+      await Promise.all(
+        highlights.map((hl) => createTaggingMutation.mutateAsync(hl))
+      );
+    } catch (err) {
+      console.error("하이라이트 저장 중 오류:", err);
+      // (에러 처리)
+    }
+
+    onClose(); // 모든 작업 완료 후 모달 닫기
   };
 
   // 텍스트 하이라이트 로직 (onSelect 이벤트)
+  // 덮어쓰기 로직 추가
   const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     const textarea = e.currentTarget;
     const start = textarea.selectionStart;
@@ -78,16 +98,22 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         text: content.slice(start, end),
       };
 
-      createTaggingMutation.mutate(newHighlight);
-      // (이 훅의 onSuccess가 캐시를 갱신하면, noteData.highlights가
-      //  바뀌고 화면이 자동으로 리렌더링됩니다.)
+      // (수정) API 즉시 호출 대신, 로컬 상태(highlights)를 업데이트
+      setHighlights((prevHighlights) => {
+        // (문제 3 해결) 새 하이라이트와 겹치는 기존 하이라이트를 필터링
+        const filteredHighlights = prevHighlights.filter(
+          (hl) => hl.startIndex >= end || hl.endIndex <= start // 겹치지 않는 것만 남김
+        );
+        // 필터링된 목록에 새 하이라이트 추가
+        return [...filteredHighlights, newHighlight];
+      });
 
       editorActions.setActiveCategory(null);
     }
   };
 
   // 현재 시간 포맷팅
-  const formattedTime = useMemo(() => {
+  const { datePart, timePart, projectName } = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
 
     // 1. 날짜 부분
@@ -100,8 +126,23 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
       dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
 
-    return { datePart, timePart }; // ⬅️ 객체로 반환
-  }, [noteData]);
+    let projName = "프로젝트";
+    if (noteData) {
+      // 1. ["projects"] 키로 캐시된 프로젝트 목록을 가져옴
+      const projects = queryClient.getQueryData<ProjectEvent[]>(["projects"]);
+
+      // 2. 목록에서 ID가 일치하는 프로젝트를 찾음
+      const project = projects?.find(
+        (p) => p.id === noteData.projectId // ⬅️ noteData.projectId는 string
+      );
+
+      if (project) {
+        projName = project.title;
+      }
+    }
+
+    return { datePart, timePart, projectName: projName };
+  }, [noteData, queryClient]);
 
   if (isLoadingNote && !noteData) {
     return (
@@ -123,11 +164,11 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         <X size={24} />
       </CloseButton>
       <ContentContainer>
-        <Header>[{noteData?.projectId || "프로젝트"}]</Header>
+        <Header>[{projectName}]</Header>
         <Header>
           {/* 1. 날짜 부분 (기본 Header 스타일) */}
-          {formattedTime.datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
-          <TimeText>{formattedTime.timePart}</TimeText>
+          {datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
+          <TimeText>{timePart}</TimeText>
         </Header>
         {/* 12. (수정) TagButtons 스타일 및 '+' 버튼 추가 */}
         <TagButtons>
@@ -159,7 +200,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
         {/*에디터 래퍼 스타일*/}
         <EditorWrapper>
-          {/*  highlights는 이제 noteData.highlights에서 옴 */}
+          {/* 렌더러가 로컬 highlights 상태를 바라보도록 수정 */}
           <HighlightRenderer content={content} highlights={highlights} />
           <NoteEditor
             value={content}
@@ -200,7 +241,7 @@ const HighlightRenderer = ({
   highlights,
 }: {
   content: string;
-  highlights: Highlight[]; // Omit 제거
+  highlights: Omit<Highlight, "id">[];
 }) => {
   // 하이라이트 시작 인덱스(startIndex) 기준으로 정렬
   const sortedHighlights = [...highlights].sort(
