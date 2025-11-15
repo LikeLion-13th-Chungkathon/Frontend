@@ -57,7 +57,7 @@ export const useCreateTextNoteMutation = () => {
         date: new Date().toISOString().split("T")[0], // 오늘 날짜 추가
       };
       const { data } = await axios.post<MemoCreateResponse>("/memos/", payload);
-      console.log(data);
+      console.log("post/memos/데이터결과: ", data);
       return data;
     },
     onSuccess: (data) => {
@@ -94,8 +94,8 @@ export const useNoteByIdQuery = (
 
       const memo = memoRes.data.results;
       const taggings = taggingRes.data.results;
-      console.log(memo);
-      console.log(taggings);
+      console.log("get/memos/id 텍스트값: ", memo);
+      console.log("get/taggings/memo/id 태깅값: ", taggings);
 
       // api 두개 -> DailyNote 1개로 조합
       const highlights: Highlight[] = taggings.map((tag) => ({
@@ -141,7 +141,7 @@ export const useUpdateMemoMutation = (noteId: string) => {
         `/memos/${noteId}/`,
         apiPayload
       );
-      console.log(data);
+      console.log("put/memos/id 노트텍스트 수정값: ", data);
       return data;
     },
     onSuccess: (_data, variables) => {
@@ -172,7 +172,7 @@ export const useCreateTaggingMutation = (memoId: string) => {
         `/taggings/memo/${memoId}/`,
         payload
       );
-      console.log(data);
+      console.log("POST /taggings/memo/{id} 태깅 값", data);
       return data;
     },
     onSuccess: (data) => {
