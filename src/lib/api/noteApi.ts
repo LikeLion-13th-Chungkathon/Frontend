@@ -89,7 +89,7 @@ export const useNoteByIdQuery = (
       // api 병렬호출
       const [memoRes, taggingRes] = await Promise.all([
         axios.get<{ results: ApiMemo }>(`/memos/${noteId}/`),
-        axios.get<{ results: ApiTagging[] }>(`/tagging/memo/${noteId}/`),
+        axios.get<{ results: ApiTagging[] }>(`/taggings/memo/${noteId}/`),
       ]);
 
       const memo = memoRes.data.results;

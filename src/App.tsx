@@ -41,8 +41,8 @@ export const router = createBrowserRouter([
       { path: "onboarding", element: <OnboardingPage /> },
       { path: "account/google/callback/*", element: <GoogleCallbackPage /> },
 
-      // '/'로 접속 시 '/home'으로 자동 이동
-      { index: true, element: <Navigate to="/home" replace /> },
+      // '/'로 접속 시 '/login'으로 자동 이동
+      { index: true, element: <Navigate to="/login" replace /> },
     ],
   },
 
