@@ -6,9 +6,14 @@ import {
   useUpdateMemoMutation, // ⬅️ "텍스트" 수정용
   useCreateTaggingMutation, // ⬅️ "하이라이트" 생성용
 } from "../../../lib/api/noteApi";
-import type { Highlight, HighlightCategory } from "../../../types";
+import type {
+  Highlight,
+  HighlightCategory,
+  ProjectEvent,
+} from "../../../types";
 import { X } from "lucide-react";
 import Modal from "../../common/Modal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NoteDetailModalProps {
   isOpen: boolean;
@@ -18,6 +23,7 @@ interface NoteDetailModalProps {
 
 // 노트 페이지
 const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
+  const queryClient = useQueryClient();
   // noteId로 노트 데이터를 "조회"
   const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
     noteId,
@@ -107,7 +113,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   };
 
   // 현재 시간 포맷팅
-  const formattedTime = useMemo(() => {
+  const { datePart, timePart, projectName } = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
 
     // 1. 날짜 부분
@@ -120,8 +126,23 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
       dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
 
-    return { datePart, timePart }; // ⬅️ 객체로 반환
-  }, [noteData]);
+    let projName = "프로젝트";
+    if (noteData) {
+      // 1. ["projects"] 키로 캐시된 프로젝트 목록을 가져옴
+      const projects = queryClient.getQueryData<ProjectEvent[]>(["projects"]);
+
+      // 2. 목록에서 ID가 일치하는 프로젝트를 찾음
+      const project = projects?.find(
+        (p) => p.id === noteData.projectId // ⬅️ noteData.projectId는 string
+      );
+
+      if (project) {
+        projName = project.title;
+      }
+    }
+
+    return { datePart, timePart, projectName: projName };
+  }, [noteData, queryClient]);
 
   if (isLoadingNote && !noteData) {
     return (
@@ -143,11 +164,11 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         <X size={24} />
       </CloseButton>
       <ContentContainer>
-        <Header>[{noteData?.projectId || "프로젝트"}]</Header>
+        <Header>[{projectName}]</Header>
         <Header>
           {/* 1. 날짜 부분 (기본 Header 스타일) */}
-          {formattedTime.datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
-          <TimeText>{formattedTime.timePart}</TimeText>
+          {datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
+          <TimeText>{timePart}</TimeText>
         </Header>
         {/* 12. (수정) TagButtons 스타일 및 '+' 버튼 추가 */}
         <TagButtons>
