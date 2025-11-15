@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import useAuthStore from "../store/useAuthStore";
 import axiosInstance from "../lib/axiosInstance";
+import type { AxiosError } from "axios";
 
 // 구글 소셜회원 온보딩(닉네임 설정) 페이지
 const OnboardingPage = () => {
@@ -18,6 +19,7 @@ const OnboardingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // 직접 접근 방지: pendingGoogleUser 없으면 로그인으로
   useEffect(() => {
     if (!pendingGoogleUser) {
       navigate("/login", { replace: true });
@@ -37,49 +39,61 @@ const OnboardingPage = () => {
     return null;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
 
-  if (isSubmitting) return; // 이미 제출 중이면 무시
+      if (isSubmitting) return; // 이미 제출 중이면 무시
 
-  const message = validateNickname(nickname);
-  if (message) {
-    setError(message);
-    return;
-  }
-
-  if (!pendingGoogleUser) return;
-
-    try {
-      setError(null);
-      setIsSubmitting(true);
-
-      const body: any = {
-        email: pendingGoogleUser.email,
-        nickname: nickname.trim(),
-      };
-
-      // usernameFromGoogle이 null/"" 아닐 때만 보냄
-      if (pendingGoogleUser.usernameFromGoogle) {
-        body.username_from_google = pendingGoogleUser.usernameFromGoogle;
+      const message = validateNickname(nickname);
+        if (message) {
+          setError(message);
+          return;
       }
 
-      console.log("📦 보내는 바디:", body);
+      if (!pendingGoogleUser) return;
+
+      try {
+        setError(null);
+        setIsSubmitting(true);
+
+        const trimmedNickname = nickname.trim();
+
+        // username_from_google에 들어갈 값 결정
+        const usernameFromGoogleForApi =
+          pendingGoogleUser.usernameFromGoogle &&
+          pendingGoogleUser.usernameFromGoogle.trim().length > 0
+            ? pendingGoogleUser.usernameFromGoogle
+            : trimmedNickname;
+
+        const body: any = {
+          email: pendingGoogleUser.email,
+          username_from_google: usernameFromGoogleForApi,
+          nickname: nickname.trim(),
+        };
+
+        // usernameFromGoogle이 null/"" 아닐 때만 보냄
+        if (pendingGoogleUser.usernameFromGoogle) {
+          body.username_from_google = pendingGoogleUser.usernameFromGoogle;
+        }
+
+      console.log("보내는 바디:", body);
 
       const res = await axiosInstance.post("/account/google/signup/", body);
 
-      console.log("✅ 구글 회원가입 완료:", res.data);
+      console.log("구글 회원가입 완료:", res.data);
 
       // swagger 기준으로 응답 구조 맞춰서 수정
-      const { email, nickname: finalNickname, token } = res.data;
+      const { email, nickname: finalNickname, token, user } = res.data;
 
       // access token 저장 (refresh는 서버에서 쿠키로 줄 수도 있음)
-      if (token?.access_token) {
-        localStorage.setItem("accessToken", token.access_token);
+      const accessToken = token?.access_token;
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken)
       }
 
-      // TODO: id 필드는 백엔드 응답에 맞게 바꾸기
-      setUser({ id: "", name: finalNickname, email });
+      const id = user?.id?.toString?.() ?? "";
+
+      setUser({ id, name: finalNickname, email });
       setPendingGoogleUser(null);
       setStatus("AUTHENTICATED");
 
@@ -91,7 +105,35 @@ const OnboardingPage = () => {
         navigate("/home", { replace: true });
       }, 1500);
     } catch (err) {
-      console.error("구글 회원가입 중 오류:", err);
+      const axiosErr = err as AxiosError<any>;
+      const status = axiosErr.response?.status;
+      const data = axiosErr.response?.data as
+        | { email?: string[]; nickname?: string[] }
+        | undefined;
+
+      console.error("구글 회원가입 중 오류:", status, data);
+
+      // 400: Validation / 중복 에러 처리
+      if (status === 400 && data) {
+        // 이미 존재하는 이메일 (이미 가입된 구글 계정)
+        if (data.email && data.email[0]?.includes("already exists")) {
+          alert("이미 가입된 구글 계정입니다. 로그인 화면으로 이동할게요.");
+          setStatus("UNAUTHENTICATED");
+          setIsSubmitting(false);
+          setPendingGoogleUser(null);
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        // 닉네임이 이미 사용 중
+        if (data.nickname && data.nickname[0]?.includes("already taken")) {
+          setError("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 그 외 에러
       setStatus("UNAUTHENTICATED");
       setIsSubmitting(false);
       setError("회원가입 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -106,7 +148,7 @@ const OnboardingPage = () => {
         <Card>
           <TextBlock>
             <BigText>{nickname || "닉네임"}님, 환영합니다.</BigText>
-            <SubText>[프로젝트명]의 첫 기록을 시작해보세요!</SubText>
+            <SubText>loglion에서 기록을 시작해보세요!</SubText>
           </TextBlock>
           <LoadingRing />
         </Card>
