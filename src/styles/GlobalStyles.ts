@@ -5,8 +5,8 @@ import { createGlobalStyle } from "styled-components";
 import normalize from "styled-normalize";
 
 const GlobalStyle = createGlobalStyle`
-  //프리텐다드 폰트 불러오기
-  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+  /* (수정) .ttf 경로 대신, 이 표준 CDN을 사용 */
+  @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2/LeeSeoyun.css');
 
   // 이서윤체 폰트 불러오기
   @font-face {
