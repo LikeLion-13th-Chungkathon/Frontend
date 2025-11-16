@@ -29,9 +29,29 @@ export default function BottomNav() {
 
     return (
         <NavContainer>
-            {/* 플로팅 버튼 왼쪽 부분 (홈, 태그 버튼) */}
-            <NavGroup>
-                {navItems.slice(0, 2).map((item) => (
+            <NavInner>
+                {/* 플로팅 버튼 왼쪽 부분 (홈, 태그 버튼) */}
+                <NavGroup>
+                    {navItems.slice(0, 2).map((item) => (
+                        <NavButton
+                            key={item.name}
+                            $active={location.pathname === item.path}
+                            onClick={() => navigate(item.path)}
+                        >
+                            {item.icon}
+                            <span>{item.name}</span>
+                        </NavButton>
+                    ))}
+                </NavGroup>
+            
+                {/* 가운데 플로팅 버튼 (작성 버튼) */}
+                <FloatingButton onClick={handleCreate}>
+                    <Pencil size={24} />
+                </FloatingButton>
+            
+                {/* 플로팅 버튼 오른쪽 부분 (리뷰, 마이페이지 버튼) */}
+                <NavGroup>
+                    {navItems.slice(2).map((item) => (
                     <NavButton
                         key={item.name}
                         $active={location.pathname === item.path}
@@ -40,48 +60,38 @@ export default function BottomNav() {
                         {item.icon}
                         <span>{item.name}</span>
                     </NavButton>
-                ))}
-            </NavGroup>
-        
-            {/* 가운데 플로팅 버튼 (작성 버튼) */}
-            <FloatingButton onClick={handleCreate}>
-                <Pencil size={24} />
-            </FloatingButton>
-        
-            {/* 플로팅 버튼 오른쪽 부분 (리뷰, 마이페이지 버튼) */}
-            <NavGroup>
-                {navItems.slice(2).map((item) => (
-                <NavButton
-                    key={item.name}
-                    $active={location.pathname === item.path}
-                    onClick={() => navigate(item.path)}
-                >
-                    {item.icon}
-                    <span>{item.name}</span>
-                </NavButton>
-                ))}
-            </NavGroup>
+                    ))}
+                </NavGroup>
+            </NavInner>
         </NavContainer>
     );
 }
 
-
 const NavContainer = styled.nav`
     position: fixed;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    /* left: 50%;
+    transform: translateX(-50%); */
 
     width: 100%;
     max-width: ${({ theme }) => theme.layout.maxWidth};
 
     height: 64px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
     background: ${({ theme }) => theme.colors.background2};
     border-top: 1px solid #e5e7eb;
     z-index: 50;
+
+    display: flex;
+    justify-content: center;   /* 안쪽 박스를 가운데로 */
+`;
+
+const NavInner = styled.div`
+    width: 100%;
+    max-width: ${({ theme }) => theme.layout.maxWidth};
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
 `;
 
 const NavGroup = styled.div`
