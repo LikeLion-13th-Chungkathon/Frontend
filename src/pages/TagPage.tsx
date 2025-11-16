@@ -14,6 +14,7 @@ import NoteDetailModal from "../components/domain/Home/NoteDetailModal";
 // API 훅 & zustand 스토어 추가
 import useCalendarStore from "../store/useCalendarStore";
 import { useReviewsQuery } from "../lib/api/reviewApi";
+import useAuthStore from "../store/useAuthStore";
 
 const TagPage = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -90,9 +91,15 @@ const TagPage = () => {
     setSelectedNoteId(null);
   };
 
-  // 8. (추가) 로딩 및 에러 처리
-  if (isLoading) return <Wrapper>Loading...</Wrapper>;
-  if (isError || !teamProgress) return <Wrapper>Error...</Wrapper>;
+  // 유저 정보
+  const user = useAuthStore((s) => s.user);
+  const nickname = user?.name ?? "사용자";
+
+    // 8. (추가) 로딩 및 에러 처리
+    if (isLoading) return <Wrapper>Loading...</Wrapper>;
+    if (isError || !teamProgress || !reviewData) {
+        return <Wrapper>Error...</Wrapper>;
+    }
 
   return (
     <Wrapper>
@@ -119,7 +126,7 @@ const TagPage = () => {
         </TitleContainer>
       </HouseBackground>
 
-      <Title>닉네임명1234의 [{teamProgress.projectName}] 회고</Title>
+      <Title>{nickname}의 [{teamProgress.projectName}] 회고</Title>
 
       <TagResultBox>
         <TagResult
@@ -149,6 +156,8 @@ const TagPage = () => {
         projectId={activeProjectId} // ⬅️ 시트가 API를 호출하도록 ID 전달
         projectTitle={teamProgress.projectName}
         progress={progressPercentage}
+        totalRequiredLogs={teamProgress.totalLogsForCompletion}
+        currentLogs={teamProgress.teamLogCount}
       />
 
       {/* 개별 통나무 클릭시 노트 모달 */}

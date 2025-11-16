@@ -4,12 +4,16 @@ import FireProgress from "../../common/FireProgress";
 import UserLogProgress from "./UserLogProgress";
 import { useProjectContributionQuery } from "../../../lib/api/reviewApi";
 
+
 interface TagStatusSheetProps {
   open: boolean;
   onClose: () => void;
   projectId: string | null;
   projectTitle: string;
   progress: number; // 0~100
+
+  totalRequiredLogs: number;
+  currentLogs: number;
 }
 
 const TagStatusSheet = ({
@@ -18,6 +22,8 @@ const TagStatusSheet = ({
   projectId,
   projectTitle,
   progress,
+  totalRequiredLogs,
+  currentLogs,
 }: TagStatusSheetProps) => {
   if (!open) return null;
 
@@ -25,6 +31,7 @@ const TagStatusSheet = ({
   const { data: contributions, isLoading } =
     useProjectContributionQuery(projectId);
 
+     const remainingLogs = Math.max(totalRequiredLogs - currentLogs, 0);
   return (
     <Overlay onClick={onClose}>
       {/* 시트 내부 클릭 시 닫히지 않도록 */}
@@ -36,7 +43,7 @@ const TagStatusSheet = ({
               <Title>[{projectTitle}] 통나무집 참여 현황</Title>
               {/* <CloseButton onClick={onClose}>✕</CloseButton> */}
             </Header>
-            <SubTitle>완성까지 통나무 n개가 더 필요해요!</SubTitle>
+            <SubTitle>완성까지 통나무 {remainingLogs}개가 더 필요해요!</SubTitle>
           </ContentText>
 
           {/* 상단 큰 진행률바 - tagbottom 프리셋 사용 */}

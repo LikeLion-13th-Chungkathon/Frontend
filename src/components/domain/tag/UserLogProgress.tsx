@@ -47,7 +47,7 @@ const Row = styled.div`
 const Nickname = styled.span`
   color: #000;
   font-family: LeeSeoyun;
-  font-size: 14px;
+  font-size: 16px;
   flex: 0 0 auto; /* 줄어들지 않게 */
 `;
 
