@@ -3,15 +3,11 @@ import GlobalStyle from "./styles/GlobalStyles";
 import theme from "./styles/theme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import Layout from "./components/common/layout/Layout";
-import ReviewsPage from "./pages/ReviewsPage";
+import LandingPage from "./pages/LandingPage";
 import NewNotePage from "./pages/NewNotePage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -32,7 +28,6 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "home", element: <HomePage /> },
-      { path: "reviews", element: <ReviewsPage /> },
       { path: "tags", element: <TagPage /> },
       { path: "mypage", element: <MyPage /> },
 
@@ -42,7 +37,7 @@ export const router = createBrowserRouter([
       { path: "account/google/callback/*", element: <GoogleCallbackPage /> },
 
       // '/'로 접속 시 '/login'으로 자동 이동
-      { index: true, element: <Navigate to="/login" replace /> },
+      { index: true, element: <LandingPage /> },
     ],
   },
 
