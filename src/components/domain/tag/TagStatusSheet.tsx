@@ -155,6 +155,7 @@ const SubTitle = styled.p`
 const ProgressWrapper = styled.div`
   margin-top: 8px;
   margin-bottom: 12px;
+  align-items: center;
 `;
 
 const UserList = styled.div`
