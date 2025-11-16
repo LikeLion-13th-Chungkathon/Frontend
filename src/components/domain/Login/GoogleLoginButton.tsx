@@ -1,6 +1,6 @@
 export default function GoogleLoginButton() {
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const GOOGLE_SEVER_REDIRECT_URL = import.meta.env.VITE_GOOGLE_REDIRECT
+  const GOOGLE_SEVER_REDIRECT_URL = import.meta.env.VITE_GOOGLE_REDIRECT;
   const GOOGLE_SCOPE = import.meta.env.VITE_GOOGLE_SCOPE_USERINFO;
   const GOOGLE_CALLBACK_URL = import.meta.env.VITE_GOOGLE_CALLBACK_URI;
 
@@ -26,21 +26,26 @@ export default function GoogleLoginButton() {
       style={{
         display: "flex",
         alignItems: "center",
+        justifyContent: "center",
         gap: "8px",
-        padding: "10px 16px",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-        background: "#fff",
+        // padding: "10px 16px",
+        border: "none",
+        color: "white",
+        fontSize: "16px",
+        width: "239px",
+        height: "51px",
+        borderRadius: "26px",
+        background: "#CA8853",
         cursor: "pointer",
       }}
     >
       <img
         src="https://developers.google.com/identity/images/g-logo.png"
         alt="Google logo"
-        width={18}
-        height={18}
+        width={24}
+        height={24}
       />
-      구글로 로그인하기
+      구글로 시작하기
     </button>
   );
 }

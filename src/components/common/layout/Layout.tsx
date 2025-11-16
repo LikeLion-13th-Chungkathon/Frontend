@@ -18,11 +18,10 @@ export default function Layout() {
   return (
     <Wrapper>
       <AppContainer>
-          <Outlet />
+        <Outlet />
 
         {!shouldHideNav && <BottomNav />}
       </AppContainer>
-      
     </Wrapper>
   );
 }
