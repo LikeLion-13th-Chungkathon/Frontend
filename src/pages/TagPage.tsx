@@ -1,16 +1,49 @@
 import ProjectSelector from '../components/domain/Home/ProjectSelector'
 import styled from 'styled-components'
+import houseBackground from '../assets/images/tagbackground.png'
 import LogHouseImg1 from '../assets/images/loghouse1.png'
+import LogHouseImg2 from '../assets/images/loghouse2.png'
+import LogHouseImg3 from '../assets/images/loghouse3.png'
 import FireProgress from '../components/common/FireProgress'
 import { calculateProgress } from '../lib/utils/projectProgress'
 import TagResult from '../components/domain/tag/TagResult'
+import { useState } from 'react'
+import TagStatusSheet from '../components/domain/tag/TagStatusSheet'
+import NoteDetailModal from '../components/domain/Home/NoteDetailModal'
 
 const TagPage = () => {
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+    // 노트 모달 상태
+    const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
     // TODO: 실제로는 여기서 선택된 프로젝트 정보(Zustand, props 등) 가져오기
     const dummyProject = {
         startDate: "2025-11-01",
         endDate: "2025-12-01",
+        title: "프로젝트123456",
     };
+
+    // TODO: 실제 데이터로 교체 (각 통나무 = 한 번의 회고 기록)
+    const problemLogs = [
+        { noteId: "note-problem-1" },
+    ];
+
+    const ideaLogs = [
+        { noteId: "note-idea-1" },
+        { noteId: "note-idea-2" },
+        { noteId: "note-idea-3" },
+    ];
+
+    const solutionLogs = [
+        { noteId: "note-solution-1" },
+        { noteId: "note-solution-2" },
+        { noteId: "note-solution-3" },
+        { noteId: "note-solution-4" },
+        { noteId: "note-solution-5" },
+    ];
+
 
     // 숫자로 된 진행률 계산 (0~100)
     const progressPercentage = calculateProgress(
@@ -18,13 +51,27 @@ const TagPage = () => {
         dummyProject.endDate
     );
 
+    const openSheet = () => setIsSheetOpen(true);
+    const closeSheet = () => setIsSheetOpen(false);
+
+    // 통나무(개별 로그) 클릭 → noteId로 모달 열기
+    const handleClickLog = (noteId: string) => {
+        setSelectedNoteId(noteId);
+        setIsNoteModalOpen(true);
+    };
+
+    const closeNoteModal = () => {
+        setIsNoteModalOpen(false);
+        setSelectedNoteId(null);
+    };
+
   return (
     <Wrapper>
-        <HouseBackground >
+        <HouseBackground>
             <ProjectSelector />
             <TitleContainer>
                 {/* TODO: 실제 누르고 있는 프로젝트 이름 나오도록 해야함 */}
-                <Title>[프로젝트123456] 팀의 통나무집</Title>
+                <Title>[{dummyProject.title}] 팀의 통나무집</Title>
                 <CountContainer>
                     <CountBox>
                         <CountTextBox>
@@ -38,7 +85,7 @@ const TagPage = () => {
                     </CountBox>
                 </CountContainer>
 
-                <LogHouseImg src={LogHouseImg1}/>
+                <LogHouseImg src={LogHouseImg2} onClick={openSheet}/>
 
                 <FireProgress value={progressPercentage} size='tag'/>
             </TitleContainer>
@@ -47,10 +94,39 @@ const TagPage = () => {
         <Title>닉네임명1234의 [프로젝트명1] 회고</Title>
 
         <TagResultBox>
-            <TagResult variant="problem" title="문제" count={1} />
-            <TagResult variant="idea" title="아이디어" count={3} />
-            <TagResult variant="solution" title="해결" count={5} />
+            <TagResult
+                variant="problem"
+                title="문제"
+                logs={problemLogs}
+                onClickLog={handleClickLog}
+            />
+            <TagResult
+                variant="idea"
+                title="아이디어"
+                logs={ideaLogs}
+                onClickLog={handleClickLog}
+            />
+            <TagResult
+                variant="solution"
+                title="해결"
+                logs={solutionLogs}
+                onClickLog={handleClickLog}
+            />
         </TagResultBox>
+
+        <TagStatusSheet
+            open={isSheetOpen}
+            onClose={closeSheet}
+            projectTitle={dummyProject.title}
+            progress={progressPercentage}
+        />
+
+        {/* 개별 통나무 클릭시 노트 모달 */}
+        <NoteDetailModal
+            isOpen={isNoteModalOpen}
+            noteId={selectedNoteId}
+            onClose={closeNoteModal}
+        />
     </Wrapper>
   )
 }
@@ -66,13 +142,30 @@ const Wrapper = styled.div`
 
 const HouseBackground = styled.div`
     width: 375px;
-    height: 450px; // 디자인에 맞게 조절 필요
+    height: 520px; // 디자인에 맞게 조절 필요
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: linear-gradient(180deg, #FFF7ED 18.27%, rgba(148, 235, 246, 0.80) 66.35%, rgba(127, 209, 114, 0.80) 82.21%, #FFF7ED 100%);
+
+    background: 
+        url(${houseBackground}) center/cover no-repeat,
+        linear-gradient(
+            180deg, 
+            #FFF7ED 18.27%, 
+            rgba(148, 235, 246, 0.80) 66.35%, 
+            rgba(127, 209, 114, 0.80) 82.21%, 
+            #FFF7ED 100%
+        );
+    
+    background-size:
+        120%,
+        cover;
+
+    background-position:
+        calc(50% + 10px) calc(100% - 100px),
+        center;
 `
 
 const TitleContainer = styled.div`
@@ -111,8 +204,12 @@ const CountBox = styled.div`
 `
 
 const LogHouseImg = styled.img`
+    margin-top: 28px;
+    margin-bottom: 24px;
     width: 292px;
     height: 210px;
+    transform: scale(1.05);
+    /* transform-origin: center; */
     flex-shrink: 0;
     aspect-ratio: 146/105;
 `
