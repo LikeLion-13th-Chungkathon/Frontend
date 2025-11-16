@@ -31,6 +31,10 @@ const TagPage = () => {
     isError,
   } = useReviewsQuery(activeProjectId);
 
+  console.log("[TagPage] activeProjectId =", activeProjectId);
+  console.log("[TagPage] reviewData =", reviewData);
+  console.log("[TagPage] isError =", isError);
+
   //progress 퍼센트 3개로 나눠서
   const getHouseImage = (progress: number) => {
     if (progress < 34) return LogHouseImg1;
@@ -160,20 +164,26 @@ const TagPage = () => {
 export default TagPage;
 
 const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    width: 100%;
+    height: 100%;           // 부모(AppLayout)가 준 높이 꽉 채우기
+    display: flex;
+    flex-direction: column;
+    align-items: center;    // 가운데 정렬은 가로만
+    justify-content: flex-start; // 위에서부터 쌓이게
+    overflow-y: auto;       // 내용 길어지면 여기서 스크롤
+    padding-bottom: 68px;   // 바텀탭/네브에 안 가리게 여백
+    gap: 12px;
 `;
 
 const HouseBackground = styled.div`
   width: 375px;
-  height: 520px; // 디자인에 맞게 조절 필요
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; // 위에서부터 쌓이게
   flex-shrink: 0;
+  margin-bottom: 20px;
 
   background: url(${houseBackground}) center/cover no-repeat,
     linear-gradient(
@@ -186,7 +196,7 @@ const HouseBackground = styled.div`
 
   background-size: 100%, cover;
 
-  background-position: calc(50%) calc(100% - 104px), center;
+  background-position: calc(50%) calc(100% - 64px), center;
 `;
 
 const TitleContainer = styled.div`

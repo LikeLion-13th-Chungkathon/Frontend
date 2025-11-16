@@ -22,7 +22,7 @@ const theme: Theme = {
   },
   //기본 레이아웃
   layout: {
-    maxWidth: "375px", // 모바일 앱 폭
+    maxWidth: "380px", // 모바일 앱 폭
     padding: "16px",
   },
 };
