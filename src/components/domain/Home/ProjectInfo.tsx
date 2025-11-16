@@ -87,7 +87,7 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
 
       <TitleRow>
         {/* 프로젝트 제목 (이제 ... 처리가 됨) */}
-        <Title onClick={handleTitleClick}>{project.title}</Title>
+        <Title onClick={handleTitleClick}>[{project.title}]</Title>
 
         {/* 진행률 그래프 */}
         <ProgressContainer>
