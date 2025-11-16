@@ -1,3 +1,5 @@
+import googleImg from "../../../assets/images/google-Img.png";
+
 export default function GoogleLoginButton() {
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const GOOGLE_SEVER_REDIRECT_URL = import.meta.env.VITE_GOOGLE_REDIRECT;
@@ -40,10 +42,11 @@ export default function GoogleLoginButton() {
       }}
     >
       <img
-        src="https://developers.google.com/identity/images/g-logo.png"
+        src={googleImg}
         alt="Google logo"
         width={24}
         height={24}
+        style={{ backgroundColor: "transparent" }} // ⬅️ 추가
       />
       구글로 시작하기
     </button>
