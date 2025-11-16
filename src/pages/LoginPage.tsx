@@ -1,7 +1,7 @@
 // src/pages/LoginPage.tsx
 import styled from "styled-components";
 import GoogleLoginButton from "../components/domain/Login/GoogleLoginButton";
-import LogoImage from "../../../assets/images/lion-head.png";
+import LogoImage from "../assets/images/lion-head.png";
 
 export default function LoginPage() {
   console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
