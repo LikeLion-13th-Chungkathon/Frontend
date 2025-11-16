@@ -37,20 +37,12 @@ export default UserLogProgress;
 
 /* ================= 스타일 ================= */
 
-// const Row = styled.div`
-//   display: flex;
-//   align-items: center;
-//   justify-content: space-between;
-//   gap: 8px;
-// `;
-
 const Row = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* ← 여기! */
-  gap: 8px; /* 원하는 여백만큼 */
+  justify-content: space-between;
+  gap: 4px;
 `;
-
 
 const Nickname = styled.span`
   color: #000;
