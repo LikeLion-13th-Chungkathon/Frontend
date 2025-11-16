@@ -5,10 +5,10 @@ import type { HighlightCategory } from "../../types";
  * (Swagger 기준: 0 = 문제)
  */
 export const tagStyleToCategory = (styleId: number): HighlightCategory => {
-  if (styleId === 0) return "PROBLEM";
+  if (styleId === 1) return "PROBLEM";
   // (Swagger에 1, 2가 없으므로 임시 지정)
-  if (styleId === 1) return "IDEA";
-  if (styleId === 2) return "SOLUTION";
+  if (styleId === 2) return "IDEA";
+  if (styleId === 3) return "SOLUTION";
   return "PROBLEM"; // 기본값
 };
 
@@ -16,8 +16,8 @@ export const tagStyleToCategory = (styleId: number): HighlightCategory => {
  * 프론트엔드 카테고리명을 백엔드 tag_style ID로 변환
  */
 export const categoryToTagStyle = (category: HighlightCategory): number => {
-  if (category === "PROBLEM") return 0;
-  if (category === "IDEA") return 1;
-  if (category === "SOLUTION") return 2;
-  return 0;
+  if (category === "PROBLEM") return 1;
+  if (category === "IDEA") return 2;
+  if (category === "SOLUTION") return 3;
+  return 1; //기본값
 };

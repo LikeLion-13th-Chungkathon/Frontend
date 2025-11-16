@@ -11,6 +11,7 @@ export interface Highlight {
   startIndex: number;
   endIndex: number;
   text: string;
+  memoId?: string;
 }
 
 // 특정 날짜에 대한 노트 문서(메인 데이터)

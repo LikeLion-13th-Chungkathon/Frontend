@@ -15,8 +15,8 @@ export default function MemberForm({ onClose }: { onClose: () => void }) {
 
     //초대코드로 참여 시도
     joinProject.mutate(inviteCode, {
-      onSuccess: (project) => {
-        alert(`"${project.message}" 프로젝트 참여 완료`);
+      onSuccess: (response) => {
+        alert(`"${response.message}" 프로젝트 참여 완료`);
         onClose();
       },
       onError: (err) => {
