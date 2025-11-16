@@ -3,16 +3,23 @@ import TagLog from "../../../assets/images/taglog.png"
 
 type TagVariant = "idea" | "problem" | "solution";
 
+type TagLogItem = {
+    noteId: string;
+    // 필요하면 createdAt, title 등의 메타도 나중에 추가 가능
+};
+
 interface TagResultProps {
     /** 아이디어 / 문제 / 해결 */
     variant: TagVariant;
     /** 타이틀 텍스트 (예: '아이디어', '문제') */
     title: string;
-    /** 작성 수 = TagLog 이미지 개수 */
-    count: number;
+    /** 각 통나무에 대응하는 로그(노트)들 */
+    logs: TagLogItem[];
+    /** 특정 로그(통나무) 클릭 시 호출 */
+    onClickLog?: (noteId: string) => void;
 }
 
-const TagResult = ({ variant, title, count }: TagResultProps) => {
+const TagResult = ({ variant, title, logs, onClickLog }: TagResultProps) => {
     // variant에 따라 배경색 결정
     const backgroundColor =
         variant === "idea"
@@ -27,13 +34,14 @@ const TagResult = ({ variant, title, count }: TagResultProps) => {
                 {title}
             </TagTitle>
             <LogBox>
-                {Array.from({ length: count }).map((_, idx) => (
-                    <TagLogImg
-                        key={idx}
-                        src={TagLog}
-                        alt={`${title} 로그 ${idx + 1}`}
-                    />
-                ))}
+                    {logs.map((log, idx) => (
+                        <TagLogImg
+                            key={log.noteId ?? idx}
+                            src={TagLog}
+                            alt={`${title} 로그 ${idx + 1}`}
+                            onClick={() => onClickLog?.(log.noteId)}
+                        />
+                    ))}
             </LogBox>
         </Wrapper>
     )
