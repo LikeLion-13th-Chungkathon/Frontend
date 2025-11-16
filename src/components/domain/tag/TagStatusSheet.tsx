@@ -141,9 +141,3 @@ const UserList = styled.div`
   flex-direction: column;
   gap: 8px;
 `;
-
-const UserRow = styled.div`
-  color: #000;
-  font-family: LeeSeoyun;
-  font-size: 14px;
-`;

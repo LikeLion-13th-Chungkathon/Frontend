@@ -18,10 +18,17 @@ const TagPage = () => {
     const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
     const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
+    //progress 퍼센트 3개로 나눠서
+    const getHouseImage = (progress: number) => {
+        if (progress < 34) return LogHouseImg1;
+        if (progress < 67) return LogHouseImg2;
+        return LogHouseImg3;
+    };
+
     // TODO: 실제로는 여기서 선택된 프로젝트 정보(Zustand, props 등) 가져오기
     const dummyProject = {
         startDate: "2025-11-01",
-        endDate: "2025-12-01",
+        endDate: "2025-11-10",
         title: "프로젝트123456",
     };
 
@@ -85,7 +92,7 @@ const TagPage = () => {
                     </CountBox>
                 </CountContainer>
 
-                <LogHouseImg src={LogHouseImg2} onClick={openSheet}/>
+                <LogHouseImg src={getHouseImage(progressPercentage)} onClick={openSheet}/>
 
                 <FireProgress value={progressPercentage} size='tag'/>
             </TitleContainer>
@@ -160,11 +167,11 @@ const HouseBackground = styled.div`
         );
     
     background-size:
-        120%,
+        100%,
         cover;
 
     background-position:
-        calc(50% + 10px) calc(100% - 100px),
+        calc(50%) calc(100% - 104px),
         center;
 `
 
