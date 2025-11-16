@@ -8,11 +8,12 @@ export default function Layout() {
   const location = useLocation();
 
   // 네비바를 숨길 경로 정의 (정규식 or 문자열 둘 다 가능)
-  const HIDE_NAV_PATHS = ["/login", "/onboarding", "/create", "/"];
+  const HIDE_NAV_PATHS = ["/login", "/onboarding", "/create"];
 
   // 현재 경로가 제외 목록에 포함되어 있으면 숨기기
-  const shouldHideNav = HIDE_NAV_PATHS.some((path) =>
-    location.pathname.startsWith(path)
+  const shouldHideNav = 
+    location.pathname === "/" ||
+    HIDE_NAV_PATHS.some((path) => location.pathname.startsWith(path)
   );
 
   return (

@@ -40,11 +40,6 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
     ],
   },
-
-  // {
-  //   path: "/account/google/callback/*",
-  //   element: <HomePage />, // 나중에 GoogleCallbackPage로 바꿀 예정
-  // },
 ]);
 
 const App = () => {
