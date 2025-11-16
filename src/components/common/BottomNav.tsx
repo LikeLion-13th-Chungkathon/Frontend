@@ -1,4 +1,4 @@
-import { Home, Tag, Pencil, Star, User } from "lucide-react";
+import { Home, Tag, Pencil } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import useCalendarStore from "../../store/useCalendarStore";
@@ -15,8 +15,6 @@ export default function BottomNav() {
     const navItems = [
         { name: "홈", icon: <Home size={22} />, path: "/home" },
         { name: "태그", icon: <Tag size={22} />, path: "/tags" },
-        { name: "리뷰", icon: <Star size={22} />, path: "/reviews" },
-        { name: "마이페이지", icon: <User size={22} />, path: "/mypage" },
     ];
 
     const handleCreate = () => {
@@ -30,18 +28,15 @@ export default function BottomNav() {
     return (
         <NavContainer>
             <NavInner>
-                {/* 플로팅 버튼 왼쪽 부분 (홈, 태그 버튼) */}
+                {/* 플로팅 버튼 왼쪽 부분 (홈 버튼) */}
                 <NavGroup>
-                    {navItems.slice(0, 2).map((item) => (
-                        <NavButton
-                            key={item.name}
-                            $active={location.pathname === item.path}
-                            onClick={() => navigate(item.path)}
-                        >
-                            {item.icon}
-                            <span>{item.name}</span>
-                        </NavButton>
-                    ))}
+                    <NavButton
+                        $active={location.pathname === navItems[0].path}
+                        onClick={() => navigate(navItems[0].path)}
+                    >
+                        {navItems[0].icon}
+                        <span>{navItems[0].name}</span>
+                    </NavButton>
                 </NavGroup>
             
                 {/* 가운데 플로팅 버튼 (작성 버튼) */}
@@ -49,18 +44,15 @@ export default function BottomNav() {
                     <Pencil size={24} />
                 </FloatingButton>
             
-                {/* 플로팅 버튼 오른쪽 부분 (리뷰, 마이페이지 버튼) */}
+                {/* 플로팅 버튼 오른쪽 부분 (태그 버튼) */}
                 <NavGroup>
-                    {navItems.slice(2).map((item) => (
                     <NavButton
-                        key={item.name}
-                        $active={location.pathname === item.path}
-                        onClick={() => navigate(item.path)}
+                        $active={location.pathname === navItems[1].path}
+                        onClick={() => navigate(navItems[1].path)}
                     >
-                        {item.icon}
-                        <span>{item.name}</span>
+                        {navItems[1].icon}
+                        <span>{navItems[1].name}</span>
                     </NavButton>
-                    ))}
                 </NavGroup>
             </NavInner>
         </NavContainer>
@@ -80,6 +72,7 @@ const NavContainer = styled.nav`
     background: ${({ theme }) => theme.colors.background2};
     border-top: 1px solid #e5e7eb;
     z-index: 50;
+    padding: 28px;
 
     display: flex;
     justify-content: center;   /* 안쪽 박스를 가운데로 */
