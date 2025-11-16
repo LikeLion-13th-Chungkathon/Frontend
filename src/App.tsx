@@ -17,11 +17,11 @@ import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import { LogAcquiredModal } from "./components/common/Modal/LogAcquiredModal";
+import TagPage from "./pages/TagPage";
 
 const queryClient = new QueryClient();
 
 // (아직 만들지 않은 페이지는 임시로 만듭니다)
-const TagsPage = () => <div>태그 페이지</div>;
 const MyPage = () => <div>마이페이지</div>;
 
 // 라우터 지도 정의
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "home", element: <HomePage /> },
       { path: "reviews", element: <ReviewsPage /> },
-      { path: "tags", element: <TagsPage /> },
+      { path: "tags", element: <TagPage /> },
       { path: "mypage", element: <MyPage /> },
 
       { path: "create", element: <NewNotePage /> },
