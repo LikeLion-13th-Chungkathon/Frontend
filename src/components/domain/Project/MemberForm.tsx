@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useJoinProjectMutation } from "../../../lib/api/projectApi";
+import type { AxiosError } from "axios";
 
 export default function MemberForm({ onClose }: { onClose: () => void }) {
   //사용자가 입력할 때마다 setInviteCode()로 업데이트
@@ -19,8 +20,33 @@ export default function MemberForm({ onClose }: { onClose: () => void }) {
         alert(`"${response.message}" 프로젝트 참여 완료`);
         onClose();
       },
-      onError: (err) => {
-        alert(err.message);
+      onError: (error) => {
+        // 에러 객체를 AxiosError로 타입 단언
+        const err = error as AxiosError<any>;
+        const errorData = err.response?.data;
+
+        // 4. 상태 코드별/필드별 에러 처리
+        if (errorData) {
+          // 400 에러: { "message": "이미 해당 프로젝트에 속해있습니다." }
+          if (errorData.message) {
+            alert(errorData.message);
+            return;
+          }
+
+          // 404 에러: { "detail": "Not found." }
+          if (errorData.detail) {
+            // "Not found."는 불친절하므로 한글로 변환해서 보여주거나, 그대로 보여줍니다.
+            if (errorData.detail === "Not found.") {
+              alert("존재하지 않는 초대코드입니다.");
+            } else {
+              alert(errorData.detail);
+            }
+            return;
+          }
+        }
+
+        // 5. 그 외 알 수 없는 에러
+        alert("프로젝트 참여 중 오류가 발생했습니다.");
       },
     });
   };
