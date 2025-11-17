@@ -1,9 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { useProjectsQuery } from "../../../lib/api/projectApi";
-import useCalendarStore, {
-  useCalendarActions,
-} from "../../../store/useCalendarStore";
+import useCalendarStore from "../../../store/useCalendarStore";
 import { Plus } from "lucide-react";
 
 import CreateProjectModal from "../Project/CreateProjectModal";
@@ -16,24 +14,61 @@ const ProjectSelector = () => {
 
   //Zustand 활성 프로젝트 ID
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
-  const { setActiveProjectId } = useCalendarActions();
+  // const { setActiveProjectId } = useCalendarActions();
+  const setActiveProjectId = useCalendarStore(
+    (state) => state.setActiveProjectId
+  );
 
   if (isLoading) {
     return <Wrapper>프로젝트 로딩 중...</Wrapper>;
   }
 
+//   return (
+//     <Wrapper>
+//       <ProjectList>
+//         {projects?.map((project) => (
+//           <ProjectButton
+//             key={project.id}
+//             isActive={project.id === activeProjectId}
+//             onClick={() => setActiveProjectId(project.id)}
+//           >
+//             {project.title}
+//           </ProjectButton>
+//         ))}
+//       </ProjectList>
+
+//       {/* + 버튼 */}
+//       <AddButton onClick={() => setIsModalOpen(true)}>
+//         <Plus size={20} />
+//       </AddButton>
+
+//       {/* 모달창 수정 후 추가 */}
+//       <CreateProjectModal
+//         isOpen={isModalOpen}
+//         onClose={() => setIsModalOpen(false)}
+//         onSubmit={(payload) => console.log("새 프로젝트 생성:", payload)}
+//       />
+//     </Wrapper>
+//   );
+// };
+
   return (
     <Wrapper>
       <ProjectList>
-        {projects?.map((project) => (
-          <ProjectButton
-            key={project.id}
-            isActive={project.id === activeProjectId}
-            onClick={() => setActiveProjectId(project.id)}
-          >
-            {project.title}
-          </ProjectButton>
-        ))}
+        {projects?.map((project) => {
+          const id = String(project.id); // 문자열로 통일
+          const isActive = id === activeProjectId;
+
+          return (
+            <ProjectButton
+              key={id}
+              isActive={isActive}
+              onClick={() => setActiveProjectId(id)} // 항상 함수 호출
+            >
+              {project.title}
+            </ProjectButton>
+          );
+        })}
       </ProjectList>
 
       {/* + 버튼 */}
@@ -41,7 +76,6 @@ const ProjectSelector = () => {
         <Plus size={20} />
       </AddButton>
 
-      {/* 모달창 수정 후 추가 */}
       <CreateProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
