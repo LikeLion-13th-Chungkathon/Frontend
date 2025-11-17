@@ -127,7 +127,7 @@ const StatusText = styled.div`
 
 const NoteItemContainer = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
 
   align-items: flex-end;
 
@@ -143,6 +143,7 @@ const CardWrapper = styled.div`
   border: none;
   box-shadow: none;
   padding: 16px 20px;
+  max-width: 85%;
 `;
 
 const CardContent = styled.p`

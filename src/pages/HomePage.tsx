@@ -84,4 +84,8 @@ const HomePageContainer = styled.div`
   flex-direction: column;
   overflow-y: auto; // 내용이 길어지면 스크롤
   padding-bottom: 60px; // ⬅️ TabBar 높이만큼 여백
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
