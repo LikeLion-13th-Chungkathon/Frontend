@@ -116,6 +116,7 @@ const CalendarWrapper = styled.div`
   // }
   .react-calendar__navigation__label {
     flex-grow: 1 !important;
+    pointer-events: none;
     font-size: 1em;
     font-weight: 900;
     // color: ${({ theme }) => theme.colors.text};
