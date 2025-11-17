@@ -86,14 +86,16 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
       <InfoRow>
         <InfoPeriodText>{period}</InfoPeriodText>
         <InfoDDayChip>{dDay}</InfoDDayChip>
-        <InfoPersonInfo>
-          <img src={PersonIcon} alt="인원" /> {memberCount}
-        </InfoPersonInfo>
       </InfoRow>
 
       <TitleRow>
         {/* 프로젝트 제목 (이제 ... 처리가 됨) */}
         <Title onClick={handleTitleClick}>[{project.title}]</Title>
+
+        {/* 사람 + 이름 */}
+        <InfoPersonInfo>
+          <img src={PersonIcon} alt="인원" /> {memberCount}
+        </InfoPersonInfo>
 
         {/* 진행률 그래프 */}
         <ProgressContainer>
@@ -104,7 +106,6 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
             <img src={FlameIcon} alt="진행률" />
           </FlameIconWrapper>
         </ProgressContainer>
-        <ProgressText>{Math.round(progressPercent)}%</ProgressText>
       </TitleRow>
     </Wrapper>
   );
@@ -132,10 +133,12 @@ const InfoPeriodText = styled.span`
 
   /* '유도리 있게' 다른 칩들과 높이를 맞추기 위한 패딩 */
   padding: 4px 10px 4px 0px;
+  margin-left: 4px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
+  margin-right: auto;
 `;
 
 const InfoRow = styled.div`
@@ -257,18 +260,18 @@ const FlameIconWrapper = styled.div`
   }
 `;
 
-const ProgressText = styled.span`
-  flex-shrink: 0; // ⬅️ 찌그러지지 않게
-  z-index: 1;
+// const ProgressText = styled.span`
+//   flex-shrink: 0; // ⬅️ 찌그러지지 않게
+//   z-index: 1;
 
-  margin-left: 8px; // ⬅️ 바(Container)와 간격
+//   margin-left: 8px; // ⬅️ 바(Container)와 간격
 
-  color: #8b4b03;
-  font-family: ${({ theme }) => theme.fonts.primary};
-  font-size: 12px;
-  font-weight: 600;
+//   color: #8b4b03;
+//   font-family: ${({ theme }) => theme.fonts.primary};
+//   font-size: 12px;
+//   font-weight: 600;
 
-  /* "100%"가 되어도 깨지지 않게 최소 너비 확보 */
-  min-width: 20px;
-  text-align: left;
-`;
+//   /* "100%"가 되어도 깨지지 않게 최소 너비 확보 */
+//   min-width: 20px;
+//   text-align: left;
+// `;

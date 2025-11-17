@@ -14,13 +14,30 @@ const ProjectSelector = () => {
   // React Query로 프로젝트 목록 가져오기
   const { data: projects, isLoading } = useProjectsQuery();
 
-  //Zustand 활성 프로젝트 ID
-  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
-  const { setActiveProjectId } = useCalendarActions();
+  if (!isLoading && (!projects || projects.length === 0)) {
+    return (
+      <EmptyWrapper>
+        <EmptyText>프로젝트를 등록하고 매일을 기록해보세요!</EmptyText>
+        <AddButton onClick={() => setIsModalOpen(true)}>
+          <Plus size={20} />
+        </AddButton>
+        {isModalOpen && (
+          <CreateProjectModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
+        )}
+      </EmptyWrapper>
+    );
+  }
 
   if (isLoading) {
     return <Wrapper>프로젝트 로딩 중...</Wrapper>;
   }
+
+  //Zustand 활성 프로젝트 ID
+  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
+  const { setActiveProjectId } = useCalendarActions();
 
   return (
     <Wrapper>
@@ -30,6 +47,7 @@ const ProjectSelector = () => {
             key={project.id}
             isActive={project.id === activeProjectId}
             onClick={() => setActiveProjectId(project.id)}
+            title={project.title} // ⬅️ (기능 1) 마우스 올리면 전체 제목 툴팁
           >
             {project.title}
           </ProjectButton>
@@ -94,6 +112,11 @@ const ProjectButton = styled.button<{ isActive: boolean }>`
   font-family: ${({ theme }) => theme.fonts.primary}; // ⬅️ 폰트 적용
   font-weight: 400;
   cursor: pointer;
+
+  max-width: 100px; // ⬅️ 최대 너비 지정 (적절히 조절)
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; // ⬅️ ... 처리
 `;
 
 const AddButton = styled.button`
@@ -111,4 +134,20 @@ const AddButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+// (기능 2) 프로젝트 없을 때 UI
+const EmptyWrapper = styled(Wrapper)`
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  height: 115px; // 시안 높이
+  background-color: #fff7ed; // (또는 theme.colors.bodyBg)
+  border: 1px solid #ca8853; // 테두리
+  border-radius: 12px;
+`;
+const EmptyText = styled.div`
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.text};
 `;
