@@ -50,11 +50,17 @@ export const useCreateTextNoteMutation = () => {
   const { openLogAcquiredModal } = useModalActions();
 
   return useMutation({
-    mutationFn: async (noteData: CreateTextNoteDTO) => {
+    mutationFn: async ({
+      noteData,
+      date,
+    }: {
+      noteData: CreateTextNoteDTO;
+      date: string;
+    }) => {
       const payload = {
         project: Number(noteData.projectId),
         contents: noteData.content,
-        date: new Date().toISOString().split("T")[0], // 오늘 날짜 추가
+        date: date, // 인자로 받은 date 사용 (YYYY-MM-DD)
       };
       const { data } = await axios.post<MemoCreateResponse>("/memos/", payload);
       console.log("post/memos/데이터결과: ", data);

@@ -95,11 +95,11 @@ const TagPage = () => {
   const user = useAuthStore((s) => s.user);
   const nickname = user?.name ?? "사용자";
 
-    // 8. (추가) 로딩 및 에러 처리
-    if (isLoading) return <Wrapper>Loading...</Wrapper>;
-    if (isError || !teamProgress || !reviewData) {
-        return <Wrapper>Error...</Wrapper>;
-    }
+  // 8. (추가) 로딩 및 에러 처리
+  if (isLoading) return <Wrapper>Loading...</Wrapper>;
+  if (isError || !teamProgress || !reviewData) {
+    return <Wrapper>Error...</Wrapper>;
+  }
 
   return (
     <Wrapper>
@@ -126,7 +126,9 @@ const TagPage = () => {
         </TitleContainer>
       </HouseBackground>
 
-      <Title>{nickname}의 [{teamProgress.projectName}] 회고</Title>
+      <Title>
+        {nickname}의 [{teamProgress.projectName}] 회고
+      </Title>
 
       <TagResultBox>
         <TagResult
@@ -173,15 +175,15 @@ const TagPage = () => {
 export default TagPage;
 
 const Wrapper = styled.div`
-    width: 100%;
-    height: 100%;           // 부모(AppLayout)가 준 높이 꽉 채우기
-    display: flex;
-    flex-direction: column;
-    align-items: center;    // 가운데 정렬은 가로만
-    justify-content: flex-start; // 위에서부터 쌓이게
-    overflow-y: auto;       // 내용 길어지면 여기서 스크롤
-    padding-bottom: 68px;   // 바텀탭/네브에 안 가리게 여백
-    gap: 12px;
+  width: 100%;
+  height: 100%; // 부모(AppLayout)가 준 높이 꽉 채우기
+  display: flex;
+  flex-direction: column;
+  align-items: center; // 가운데 정렬은 가로만
+  justify-content: flex-start; // 위에서부터 쌓이게
+  overflow-y: auto; // 내용 길어지면 여기서 스크롤
+  padding-bottom: 68px; // 바텀탭/네브에 안 가리게 여백
+  gap: 12px;
 `;
 
 const HouseBackground = styled.div`

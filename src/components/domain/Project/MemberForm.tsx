@@ -21,32 +21,30 @@ export default function MemberForm({ onClose }: { onClose: () => void }) {
         onClose();
       },
       onError: (error) => {
-        // 에러 객체를 AxiosError로 타입 단언
-        const err = error as AxiosError<any>;
-        const errorData = err.response?.data;
+        const err = error as AxiosError<any>; // TypeScript에게 AxiosError임을 알림
 
-        // 4. 상태 코드별/필드별 에러 처리
-        if (errorData) {
-          // 400 에러: { "message": "이미 해당 프로젝트에 속해있습니다." }
-          if (errorData.message) {
-            alert(errorData.message);
-            return;
-          }
+        if (err.response) {
+          // 1. 서버가 응답을 주었으나, 2xx 범위가 아닌 경우 (4xx, 5xx)
+          const { status, data } = err.response;
 
-          // 404 에러: { "detail": "Not found." }
-          if (errorData.detail) {
-            // "Not found."는 불친절하므로 한글로 변환해서 보여주거나, 그대로 보여줍니다.
-            if (errorData.detail === "Not found.") {
-              alert("존재하지 않는 초대코드입니다.");
-            } else {
-              alert(errorData.detail);
-            }
-            return;
+          console.log("에러 상태:", status);
+          console.log("에러 데이터:", data);
+
+          if (status === 404) {
+            // 404: 초대 코드가 틀린 경우
+            alert("초대 코드가 유효하지 않습니다.");
+          } else if (status === 400) {
+            // 400: 이미 가입된 경우 등 (백엔드 메시지 활용)
+            alert(data.message || "잘못된 요청입니다.");
+          } else {
+            // 500 등 그 외 서버 에러
+            alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
           }
+        } else {
+          // 2. 응답 자체가 없는 경우 (네트워크 연결 끊김, CORS 등)
+          console.error("네트워크 오류:", err);
+          alert("서버와 연결할 수 없습니다. 네트워크를 확인해주세요.");
         }
-
-        // 5. 그 외 알 수 없는 에러
-        alert("프로젝트 참여 중 오류가 발생했습니다.");
       },
     });
   };

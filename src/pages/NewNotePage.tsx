@@ -12,7 +12,7 @@ import ProjectSelector from "../components/domain/Home/ProjectSelector";
 import ProjectInfo from "../components/domain/Home/ProjectInfo";
 import { useProjectsQuery } from "../lib/api/projectApi";
 import { Button } from "../components/common/Button";
-import { useModalActions } from "../store/useModalStore";
+// import { useModalActions } from "../store/useModalStore";
 
 const NewNotePage = () => {
   const navigate = useNavigate();
@@ -23,11 +23,13 @@ const NewNotePage = () => {
 
   // 1. React Query로 프로젝트 목록을 가져옵니다.
   const { data: projects } = useProjectsQuery();
+  // 4. 현재 활성화된 프로젝트 정보 찾기
+  const activeProject = projects?.find((p) => p.id === activeProjectId);
 
   const { setActiveProjectId, setSelectedDate } = useCalendarActions();
 
   // 모달 열기 함수 추가
-  const { openLogAcquiredModal } = useModalActions();
+  // const { openLogAcquiredModal } = useModalActions();
 
   // 3. 앱 로드 시, 첫 번째 프로젝트를 활성 프로젝트로 자동 설정합니다.
   useEffect(() => {
@@ -44,29 +46,13 @@ const NewNotePage = () => {
     }
   }, [location.search, setSelectedDate]);
 
-  // 4. 현재 활성화된 프로젝트 정보 찾기
-  const activeProject = projects?.find((p) => p.id === activeProjectId);
-
   const handleSave = () => {
     if (!activeProjectId || !content) return;
 
     mutation.mutate(
-      { projectId: activeProjectId, content },
+      { noteData: { projectId: activeProjectId, content }, date: selectedDate },
       {
         onSuccess: () => {
-          const STORAGE_KEY = "logAcquiredModalShownDate_Create"; // (수정용 키와 다르게 설정)
-          const today = new Date().toISOString().split("T")[0];
-          const lastShownDate = localStorage.getItem(STORAGE_KEY);
-
-          if (lastShownDate !== today) {
-            // 오늘 처음 생성한 것이라면
-            localStorage.setItem(STORAGE_KEY, today); // 오늘 날짜 저장
-
-            // activeProject가 있으면 그 이름을 사용, 없으면 기본값
-            const projectName = activeProject?.title || "이 프로젝트";
-            openLogAcquiredModal(projectName);
-          }
-
           navigate("/home"); // 저장 후 홈으로
         },
       }
@@ -93,6 +79,10 @@ const NewNotePage = () => {
     }월 ${d.getDate()}일 ${day}요일`;
   };
 
+  const projectTitle = activeProject?.title || "프로젝트";
+  const displayTitle =
+    projectTitle.length > 4 ? projectTitle.slice(0, 4) + "..." : projectTitle;
+
   return (
     <PageWrapper>
       <ProjectSelector />
@@ -101,7 +91,9 @@ const NewNotePage = () => {
 
       {/* <CloseButton onClick={handleCancel}>X</CloseButton> */}
       <MemoContainer>
-        <MemoTitle>[프로젝트명] 진행 중에 떠오른 생각을 적어주세요!</MemoTitle>
+        <MemoTitle>
+          [{displayTitle}] 진행 중에 떠오른 생각을 적어주세요!
+        </MemoTitle>
         <ScrollBackground>
           <ScrollContent>
             <MemoTitle>{formatKoreanDate(selectedDate)}</MemoTitle>
