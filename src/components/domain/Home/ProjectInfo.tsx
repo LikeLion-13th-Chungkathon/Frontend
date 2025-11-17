@@ -89,13 +89,13 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
       </InfoRow>
 
       <TitleRow>
-        {/* 프로젝트 제목 (이제 ... 처리가 됨) */}
-        <Title onClick={handleTitleClick}>[{project.title}]</Title>
-
-        {/* 사람 + 이름 */}
-        <InfoPersonInfo>
-          <img src={PersonIcon} alt="인원" /> {memberCount}
-        </InfoPersonInfo>
+        {/* 좌측 그룹: 제목 + 인원 */}
+        <LeftGroup>
+          <Title onClick={handleTitleClick}>{project.title}</Title>
+          <InfoPersonInfo>
+            <img src={PersonIcon} alt="인원" /> {memberCount}
+          </InfoPersonInfo>
+        </LeftGroup>
 
         {/* 진행률 그래프 */}
         <ProgressContainer>
@@ -132,7 +132,7 @@ const InfoPeriodText = styled.span`
   line-height: normal;
 
   /* '유도리 있게' 다른 칩들과 높이를 맞추기 위한 패딩 */
-  padding: 4px 10px 4px 0px;
+  padding: 4px 8px 4px 0px;
   margin-left: 4px;
   height: 18px;
   display: inline-flex;
@@ -152,12 +152,11 @@ const InfoDDayChip = styled.span`
   justify-content: center;
   align-items: center;
 
-  /* 피그마 18px 높이를 맞추기 위해 box-sizing 사용 */
   height: 20px;
   padding: 5px 11px;
   box-sizing: border-box;
 
-  border-radius: 12px; // ⬅️ 시안보다 둥글게 (유도리)
+  border-radius: 12px;
   background-color: #7d4519;
   color: white;
 
@@ -168,18 +167,17 @@ const InfoDDayChip = styled.span`
   line-height: normal;
 `;
 
-// ⬇️ (신규) 3. 인원 (회색 텍스트 + 아이콘)
 const InfoPersonInfo = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 2px; // ⬅️ 피그마 10px는 너무 넓어 4px로 '유도리 있게' 수정
+  gap: 2px;
+  flex-shrink: 0;
 
-  /* 다른 요소들과 높이/패딩 맞춤 */
-  padding: 4px 10px;
+  padding: 4px 8px;
   height: 18px;
   box-sizing: border-box;
 
-  color: #8c8c8c; // ⬅️ 피그마 지정 회색
+  color: #8c8c8c;
   text-align: center;
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 12px;
@@ -190,7 +188,7 @@ const InfoPersonInfo = styled.span`
   img {
     width: 16px;
     height: 16px;
-    opacity: 1; // ⬅️ 아이콘이 너무 튀지 않게 (유도리)
+    opacity: 1;
   }
 `;
 
@@ -198,7 +196,15 @@ const TitleRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between; // ⬅️ 양쪽으로 분리
-  margin-top: 10px;
+  margin-top: 6px;
+`;
+
+const LeftGroup = styled.div`
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
 `;
 
 const Title = styled.h2`
@@ -213,8 +219,6 @@ const Title = styled.h2`
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-
-  margin-right: 16px; // ⬅️ 바(Container)와 간격
 `;
 
 const ProgressContainer = styled.div`
@@ -224,6 +228,7 @@ const ProgressContainer = styled.div`
   height: 28px;
   flex-shrink: 0;
   width: 130px;
+  margin-left: 16px;
 `;
 
 const ProgressBar = styled.div`
@@ -259,19 +264,3 @@ const FlameIconWrapper = styled.div`
     display: block;
   }
 `;
-
-// const ProgressText = styled.span`
-//   flex-shrink: 0; // ⬅️ 찌그러지지 않게
-//   z-index: 1;
-
-//   margin-left: 8px; // ⬅️ 바(Container)와 간격
-
-//   color: #8b4b03;
-//   font-family: ${({ theme }) => theme.fonts.primary};
-//   font-size: 12px;
-//   font-weight: 600;
-
-//   /* "100%"가 되어도 깨지지 않게 최소 너비 확보 */
-//   min-width: 20px;
-//   text-align: left;
-// `;
