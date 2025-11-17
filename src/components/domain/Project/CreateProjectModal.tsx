@@ -85,46 +85,46 @@ export default function CreateProjectModal({
                   setActiveProjectId(project.id);
                   setInviteCode(inviteCode);
                   setStep("invite");
-                } catch (e) {
+                } catch (error) {
                   // 실패 시 에러 처리
-                  const error = e as AxiosError<any>; // 2. 에러 타입 단언
-                  console.error("프로젝트 생성 실패:", error);
+                  const err = error as AxiosError<any>;
 
-                  if (error.response) {
-                    const { status, data } = error.response;
+                  if (err.response) {
+                    const { status, data } = err.response;
 
-                    // 3. 400 Bad Request 처리
+                    // 1. 400 Bad Request 처리 (가장 중요!)
                     if (status === 400 && data) {
-                      // Case A: 날짜 오류 (invalid_date)
-                      if (data.invalid_date) {
-                        alert(data.invalid_date.error);
-                        return;
-                      }
-
-                      // Case B: 이름 길이 오류 (limit_project_name)
-                      if (data.limit_project_name) {
-                        alert(data.limit_project_name.error);
-                        return;
-                      }
-
-                      // Case C: 그 외 400 에러 (일반적인 메시지가 올 경우 대비)
+                      // Case A: "message" 필드가 있는 경우 (예: "이미 가입된 프로젝트입니다")
                       if (data.message) {
                         alert(data.message);
                         return;
                       }
 
-                      // Case D: 백엔드에서 예상치 못한 키를 보냈을 때
-                      alert("입력값이 올바르지 않습니다. 다시 확인해주세요.");
+                      // Case B: "project_name", "date_start" 등 필드별 에러 배열인 경우
+                      // (예: { project_name: ["10자 이내로 입력하세요"] })
+                      const firstKey = Object.keys(data)[0]; // 첫 번째 키(예: project_name)를 찾음
+                      if (firstKey && Array.isArray(data[firstKey])) {
+                        alert(data[firstKey][0]); // "10자 이내로 입력하세요" 출력
+                        return;
+                      }
+
+                      // Case C: "invalid_date" 등 특정 키인 경우 (기존 로직 호환)
+                      if (data.invalid_date) {
+                        alert(data.invalid_date.error);
+                        return;
+                      }
                     }
-                    // 4. 500 등 서버 오류 처리
-                    else {
-                      alert(
-                        "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
-                      );
+
+                    // 2. 404 Not Found 처리
+                    if (status === 404) {
+                      alert("존재하지 않는 프로젝트/초대코드입니다.");
+                      return;
                     }
+
+                    // 3. 그 외 에러
+                    alert("알 수 없는 오류가 발생했습니다.");
                   } else {
-                    // 5. 네트워크 오류 (서버 응답 없음)
-                    alert("네트워크 연결을 확인해주세요.");
+                    alert("서버와 연결할 수 없습니다.");
                   }
                   // ⬆️ ⬆️ ⬆️ 에러 핸들링 로직 수정 ⬆️ ⬆️ ⬆️
                 }
