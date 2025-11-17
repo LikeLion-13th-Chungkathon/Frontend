@@ -58,8 +58,8 @@ const TagStatusSheet = ({
           ) : (
             contributions?.map((user) => (
               <UserLogProgress
-                key={user.username}
-                nickname={user.username}
+                key={user.nickname}
+                nickname={user.nickname}
                 // (주의) API가 0-100이 아닌 0-1 값을 준다면
                 // value={user.contribution_percent * 100}
                 value={user.contribution_percent}
