@@ -28,7 +28,11 @@ const TagPage = () => {
     data: me,
     isLoading: isMyLoading,
     isError: isMyError,
+    error: myError,
   } = useMyInfoQuery();
+
+  console.log("[TagPage] me =", me);
+  console.log("[TagPage] isMyError =", isMyError, myError);
 
   // 3. (추가) Zustand 스토어에서 현재 활성 프로젝트 ID 가져오기
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
@@ -112,12 +116,6 @@ const TagPage = () => {
   }
 
   const nickname = me.nickname;
-
-  // 8. (추가) 로딩 및 에러 처리
-  if (isLoading) return <Wrapper>Loading...</Wrapper>;
-  if (isError || !teamProgress || !reviewData) {
-    return <Wrapper>Error...</Wrapper>;
-  }
 
   return (
     <Wrapper>
