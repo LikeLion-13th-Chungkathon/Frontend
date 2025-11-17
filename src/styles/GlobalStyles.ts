@@ -8,13 +8,13 @@ const GlobalStyle = createGlobalStyle`
   /* (수정) .ttf 경로 대신, 이 표준 CDN을 사용 */
   @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2/LeeSeoyun.css');
 
-  // 이서윤체 폰트 불러오기
-  @font-face {
-    font-family: "LeeSeoyun";
-    src: url("/fonts/LeeSeoyun.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
-  }
+  // 이서윤체 로컬로 불러오는거 삭제
+  // @font-face {
+  //   font-family: "LeeSeoyun";
+  //   src: url("/fonts/LeeSeoyun.ttf") format("truetype");
+  //   font-weight: normal;
+  //   font-style: normal;
+  // }
 
   ${normalize}
 
@@ -42,6 +42,9 @@ const GlobalStyle = createGlobalStyle`
   input, textarea, [contenteditable] {
     -webkit-user-select: text;
     user-select: text;
+
+    /* (추가) input 요소에도 폰트가 적용되도록 명시하는 것이 좋습니다 */
+    font-family: inherit;
   }
   
   /* #root 스타일링 관련:
