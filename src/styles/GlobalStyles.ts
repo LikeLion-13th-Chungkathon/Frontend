@@ -6,15 +6,23 @@ import normalize from "styled-normalize";
 
 const GlobalStyle = createGlobalStyle`
 
-  // 로컬 파일에 있는 이서윤체 불러오기
+  /* // 로컬 파일에 있는 이서윤체 불러오기
   @font-face {
     font-family: "LeeSeoyun";
     src: url("/fonts/LeeSeoyun.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
-  }
-
+  } */
   ${normalize}
+
+  /* 이서윤체 웹폰트 */
+  @font-face {
+    font-family: 'LeeSeoyun';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2@1.0/LeeSeoyun.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
 
   * {
     margin: 0;
