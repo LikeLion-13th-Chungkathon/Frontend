@@ -14,7 +14,7 @@ import NoteDetailModal from "../components/domain/Home/NoteDetailModal";
 // API 훅 & zustand 스토어 추가
 import useCalendarStore from "../store/useCalendarStore";
 import { useReviewsQuery } from "../lib/api/reviewApi";
-import useAuthStore from "../store/useAuthStore";
+import { useMyInfoQuery } from "../lib/api/authApi";
 
 const TagPage = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -22,6 +22,13 @@ const TagPage = () => {
   // 노트 모달 상태
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  // 로그인 유저 정보
+  const {
+    data: me,
+    isLoading: isMyLoading,
+    isError: isMyError,
+  } = useMyInfoQuery();
 
   // 3. (추가) Zustand 스토어에서 현재 활성 프로젝트 ID 가져오기
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
@@ -91,12 +98,20 @@ const TagPage = () => {
     setSelectedNoteId(null);
   };
 
-  // 유저 정보
-  const user = useAuthStore((s) => s.user);
-  const nickname = user?.name ?? "사용자";
+  // // 유저 정보
+  // const user = useAuthStore((s) => s.user);
+  // const nickname = user?.name ?? "사용자";
 
-  console.log("[TagPage] user from store =", user);
-  console.log("[TagPage] nickname used in title =", nickname);
+  // console.log("[TagPage] user from store =", user);
+  // console.log("[TagPage] nickname used in title =", nickname);
+
+  // 로딩 / 에러 처리에서 myInfo까지 같이 봐주기
+  if (isMyLoading || isLoading) return <Wrapper>Loading...</Wrapper>;
+  if (isMyError || !me || isError || !teamProgress || !reviewData) {
+    return <Wrapper>Error...</Wrapper>;
+  }
+
+  const nickname = me.nickname;
 
   // 8. (추가) 로딩 및 에러 처리
   if (isLoading) return <Wrapper>Loading...</Wrapper>;
