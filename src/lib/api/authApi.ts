@@ -10,13 +10,19 @@ export type MyInfo = {
   created_at: string;
 };
 
+// 백엔드 실제 응답 형태: { results: { ...MyInfo } }
+type MyInfoResponse = {
+  results: MyInfo;
+};
+
 export const useMyInfoQuery = () => {
   return useQuery<MyInfo>({
     queryKey: ["myInfo"],
     queryFn: async () => {
-      const { data } = await axiosInstance.get<MyInfo>("/account/my/");
-      return data;
+      const { data } = await axiosInstance.get<MyInfoResponse>("/account/my/");
+      console.log("[useMyInfoQuery] /account/my/ response =", data);
+      return data.results;   // results 안에 있는 MyInfo만 돌려주기
     },
-    staleTime: 1000 * 60 * 5, // 선택: 5분 동안은 신선한 걸로 취급
+    staleTime: 1000 * 60 * 5,
   });
 };
