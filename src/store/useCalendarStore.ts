@@ -1,8 +1,19 @@
 // 달력 중심. 현재 유저가 보고있는/선택한 날짜를 전역 상태로 다루는 파일
 import { create } from "zustand";
 
-// 오늘 날짜와 이달의 1일 YYYY-MM-DD 형식 구하기
-const today = new Date().toISOString().split("T")[0];
+// ⬇️ 1. (수정) 한국 시간(로컬 타임존)을 정확히 구하는 함수 추가
+const getTodayString = () => {
+  const today = new Date();
+  // 현재 타임존과 UTC의 차이(분)를 밀리초로 변환
+  const offset = today.getTimezoneOffset() * 60000;
+  // 차이만큼 뺀 날짜 객체 생성 (한국 시간 기준)
+  const localDate = new Date(today.getTime() - offset);
+
+  return localDate.toISOString().split("T")[0];
+};
+
+// ⬇️ 2. (수정) 함수 실행 결과를 변수에 저장
+const today = getTodayString();
 const firstDayOfMonth = today.slice(0, 8) + "01";
 
 interface CalendarState {
