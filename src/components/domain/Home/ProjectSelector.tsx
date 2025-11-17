@@ -18,9 +18,9 @@ const ProjectSelector = () => {
     return (
       <EmptyWrapper>
         <EmptyText>프로젝트를 등록하고 매일을 기록해보세요!</EmptyText>
-        <AddButton onClick={() => setIsModalOpen(true)}>
-          <Plus size={20} />
-        </AddButton>
+        <EmptyAddButton onClick={() => setIsModalOpen(true)}>
+          <Plus size={24} strokeWidth={2.5} />
+        </EmptyAddButton>
         {isModalOpen && (
           <CreateProjectModal
             isOpen={isModalOpen}
@@ -77,7 +77,6 @@ const Wrapper = styled.div`
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  /* border-bottom: 1px solid #eee; ⬅️ 제거 (시안에 없음) */
   box-sizing: border-box;
   background-color: ${({ theme }) => theme.colors.bodyBg};
 `;
@@ -137,17 +136,54 @@ const AddButton = styled.button`
 `;
 
 // (기능 2) 프로젝트 없을 때 UI
-const EmptyWrapper = styled(Wrapper)`
+// Empty State 스타일
+const EmptyWrapper = styled.div`
+  width: 100%;
+  display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  height: 115px; // 시안 높이
-  background-color: #fff7ed; // (또는 theme.colors.bodyBg)
-  border: 1px solid #ca8853; // 테두리
+  gap: 16px;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  min-height: 130px;
+
+  background-color: #fff7ed;
+  border: 2px solid #ca8853;
   border-radius: 12px;
+  margin: 12px 16px;
 `;
+
 const EmptyText = styled.div`
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 14px;
-  color: ${({ theme }) => theme.colors.text};
+  font-weight: 500;
+  color: black;
+  text-align: center;
+`;
+
+const EmptyAddButton = styled.button`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px dashed #ca8853;
+  background-color: transparent;
+  cursor: pointer;
+  color: #ca8853;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(202, 136, 83, 0.1);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 `;
