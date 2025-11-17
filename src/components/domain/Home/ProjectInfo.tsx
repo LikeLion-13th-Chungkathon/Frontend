@@ -132,18 +132,17 @@ const InfoPeriodText = styled.span`
   line-height: normal;
 
   /* '유도리 있게' 다른 칩들과 높이를 맞추기 위한 패딩 */
-  padding: 4px 8px 4px 0px;
+  padding: 4px 2px 4px 0px;
   margin-left: 4px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  margin-right: auto;
 `;
 
 const InfoRow = styled.div`
   display: flex;
-  flex-wrap: wrap; // 혹시 좁아지면 줄바꿈
+  align-items: center; // 혹시 좁아지면 줄바꿈
   margin-bottom: 4px;
 `;
 
@@ -170,10 +169,10 @@ const InfoDDayChip = styled.span`
 const InfoPersonInfo = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 2px;
   flex-shrink: 0;
 
   padding: 4px 8px;
+  margin-left: -2px;
   height: 18px;
   box-sizing: border-box;
 
