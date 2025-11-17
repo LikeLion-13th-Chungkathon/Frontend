@@ -153,6 +153,7 @@ const InfoDDayChip = styled.span`
 
   height: 20px;
   padding: 5px 11px;
+  margin-left: 4px;
   box-sizing: border-box;
 
   border-radius: 12px;
@@ -203,7 +204,6 @@ const LeftGroup = styled.div`
   align-items: center;
   flex: 1;
   min-width: 0;
-  gap: 8px;
 `;
 
 const Title = styled.h2`
