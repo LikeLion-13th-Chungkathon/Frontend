@@ -5,16 +5,14 @@ import { createGlobalStyle } from "styled-components";
 import normalize from "styled-normalize";
 
 const GlobalStyle = createGlobalStyle`
-  // 폰트는 index.html로 옮김
-  // @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2/LeeSeoyun.css');
 
-  // 이서윤체 로컬로 불러오는거 삭제
-  // @font-face {
-  //   font-family: "LeeSeoyun";
-  //   src: url("/fonts/LeeSeoyun.ttf") format("truetype");
-  //   font-weight: normal;
-  //   font-style: normal;
-  // }
+  // 로컬 파일에 있는 이서윤체 불러오기
+  @font-face {
+    font-family: "LeeSeoyun";
+    src: url("/fonts/LeeSeoyun.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+  }
 
   ${normalize}
 
