@@ -91,11 +91,13 @@ const OnboardingPage = () => {
         localStorage.setItem("accessToken", accessToken)
       }
 
-      const id = user?.id?.toString?.() ?? "";
-      const email = user.email;
-      const finalNickname = user.nickname;
+      setUser({
+        id: user.id.toString(),
+        name: user.nickname,      // ← 이게 TagPage의 nickname이 된다
+        email: user.email,
+      });
 
-      setUser({ id, name: finalNickname, email });
+      // setUser({ id, name: finalNickname, email });
       setPendingGoogleUser(null);
       setStatus("AUTHENTICATED");
 
