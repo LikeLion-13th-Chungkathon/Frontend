@@ -95,6 +95,9 @@ const TagPage = () => {
   const user = useAuthStore((s) => s.user);
   const nickname = user?.name ?? "사용자";
 
+  console.log("[TagPage] user from store =", user);
+  console.log("[TagPage] nickname used in title =", nickname);
+
   // 8. (추가) 로딩 및 에러 처리
   if (isLoading) return <Wrapper>Loading...</Wrapper>;
   if (isError || !teamProgress || !reviewData) {
