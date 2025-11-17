@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useMemo } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { useEditorStore } from "../../../store/useEditorStore";
 import {
   useNoteByIdQuery,
-  useUpdateMemoMutation, // ⬅️ "텍스트" 수정용
-  useCreateTaggingMutation, // ⬅️ "하이라이트" 생성용
-  useDeleteTaggingMutation, // ⬅️  삭제 훅
+  useUpdateMemoMutation,
+  useCreateTaggingMutation,
+  useDeleteTaggingMutation,
 } from "../../../lib/api/noteApi";
-import type {
-  Highlight,
-  HighlightCategory,
-  ProjectEvent,
-} from "../../../types";
+import type { Highlight, HighlightCategory } from "../../../types";
 import { X } from "lucide-react";
 import Modal from "../../common/Modal";
-import { useQueryClient } from "@tanstack/react-query";
+import { useModalActions } from "../../../store/useModalStore";
+
+// --- 1. 모드 정의 ---
+type TabMode = "EDIT_TEXT" | "EDIT_TAGS";
 
 interface NoteDetailModalProps {
   isOpen: boolean;
@@ -24,172 +23,150 @@ interface NoteDetailModalProps {
 
 // 노트 페이지
 const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
-  const queryClient = useQueryClient();
   // noteId로 노트 데이터를 "조회"
   const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
     noteId,
-    {
-      enabled: isOpen && !!noteId,
-    }
+    { enabled: isOpen && !!noteId }
   );
 
-  // noteId에 대한 "수정" 뮤테이션 준비
+  // 뮤테이션 준비
   const updateMemoMutation = useUpdateMemoMutation(noteId!);
   const createTaggingMutation = useCreateTaggingMutation(noteId!);
-  const deleteTaggingMutation = useDeleteTaggingMutation(); // 삭제 훅 준비
+  const deleteTaggingMutation = useDeleteTaggingMutation();
 
+  const { openLogAcquiredModal } = useModalActions();
   const { activeCategory, actions: editorActions } = useEditorStore();
 
-  // 로컬 상태 (기본값을 빈 값으로)
+  const [mode, setMode] = useState<TabMode>("EDIT_TAGS");
   const [content, setContent] = useState("");
+
+  // 로컬 하이라이트 상태 (API 데이터 + 로컬 추가 데이터)
   const [localHighlights, setLocalHighlights] = useState<
     (Highlight | Omit<Highlight, "id">)[]
   >([]);
 
-  // noteData가 로드되면 'content'만 동기화
+  // 초기 데이터 로드 시 로컬 상태 동기화
   useEffect(() => {
     if (noteData) {
       setContent(noteData.content);
-      setLocalHighlights(noteData.highlights); // API 원본 하이라이트 채우기
+      setLocalHighlights(noteData.highlights);
     } else {
-      // 모달이 닫히거나 noteId가 바뀌면 초기화
       setContent("");
       setLocalHighlights([]);
     }
-  }, [noteData, noteId]);
+  }, [noteData]);
 
-  //  handleSubmit - 텍스트와 하이라이트 변경사항을 "한꺼번에" 전송
-  const handleSubmit = async () => {
-    if (!noteId || !noteData) return;
+  // --- 핸들러: 텍스트 저장 ---
+  const handleSaveText = () => {
+    if (!noteData) return;
+    if (content !== noteData.content) {
+      updateMemoMutation.mutate(
+        { content, memo: noteData },
+        {
+          onSuccess: () => setMode("EDIT_TAGS"),
+        }
+      );
+    } else {
+      setMode("EDIT_TAGS");
+    }
+  };
+
+  // --- 핸들러: 태그 저장 및 닫기 ---
+  const handleSaveTagsAndClose = async () => {
+    if (!noteData || !noteId) return;
+
+    // A. 변경 사항 계산
+    const originalIds = noteData.highlights.map((h) => h.id);
+    const currentIds = localHighlights
+      .filter((h): h is Highlight => "id" in h)
+      .map((h) => h.id);
+
+    const idsToDelete = originalIds.filter((id) => !currentIds.includes(id));
+    const tagsToCreate = localHighlights.filter((h) => !("id" in h));
+
     try {
-      // A. 텍스트 수정 (필요한 경우)
-      const isContentChanged = noteData.content !== content;
-      if (isContentChanged) {
-        await updateMemoMutation.mutateAsync({
-          content: content,
-          memo: noteData,
-        });
+      // B. API 호출
+      const deletePromises = idsToDelete.map((tagId) =>
+        deleteTaggingMutation.mutateAsync({ memoId: noteId, taggingId: tagId })
+      );
+      const createPromises = tagsToCreate.map((tag) =>
+        createTaggingMutation.mutateAsync(tag as Omit<Highlight, "id">)
+      );
+
+      await Promise.all(deletePromises);
+      const createResults = await Promise.all(createPromises);
+
+      // C. 통나무 보상 체크
+      const hasReward = createResults.some((res) => res.log_result?.success);
+      if (hasReward) {
+        openLogAcquiredModal("이 프로젝트"); // (TODO: 실제 프로젝트명 필요)
       }
-
-      // B. (오류 2 해결) 하이라이트 변경사항 계산 (삭제/추가)
-      const originalIds = new Set(noteData.highlights.map((h) => h.id));
-      const localIdsWithId = new Set(
-        localHighlights
-          .filter((h): h is Highlight => "id" in h)
-          .map((h) => h.id)
-      );
-
-      // (삭제) 원본에 있었는데, 로컬에 없는 ID 찾기
-      const idsToDelete = [...originalIds].filter(
-        (id) => !localIdsWithId.has(id)
-      );
-
-      // (생성) 로컬에 있는데, 'id'가 없는 (신규) 하이라이트 찾기
-      const highlightsToCreate = localHighlights.filter(
-        (h): h is Omit<Highlight, "id"> => !("id" in h)
-      );
-
-      // C. 삭제 API 호출 (병렬)
-      await Promise.all(
-        idsToDelete.map((taggingId) =>
-          deleteTaggingMutation.mutateAsync({
-            memoId: noteId,
-            taggingId: String(taggingId),
-          })
-        )
-      );
-
-      // D. 생성 API 호출 (병렬)
-      await Promise.all(
-        highlightsToCreate.map((hl) => createTaggingMutation.mutateAsync(hl))
-      );
-    } catch (err) {
-      console.error("저장 중 오류:", err);
-      alert("저장 중 오류가 발생했습니다.");
+    } catch (e) {
+      console.error(e);
+      alert("태그 저장 중 오류가 발생했습니다.");
     } finally {
-      // (수정) 성공/실패 여부와 관계없이 모달을 닫고 캐시 무효화
-      // (onSuccess는 mutateAsync에서 사용할 수 없으므로 finally로 이동)
-      queryClient.invalidateQueries({ queryKey: ["notes", noteId] });
-      queryClient.invalidateQueries({
-        queryKey: ["notes", noteData.projectId, noteData.date],
-      });
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
       onClose();
     }
   };
 
-  // 7. (수정) handleTextSelect - 로컬 상태만 변경 (Problem 1, 2, 3 해결)
-  const handleTextSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
+  // --- 핸들러: 로컬 태그 추가 ---
+  const handleLocalCreateTag = (
+    e: React.SyntheticEvent<HTMLTextAreaElement>
+  ) => {
+    if (mode !== "EDIT_TAGS") return;
 
-    // (Problem 2 해결) 역방향 드래그 처리
+    const textarea = e.currentTarget;
     const start = Math.min(textarea.selectionStart, textarea.selectionEnd);
     const end = Math.max(textarea.selectionStart, textarea.selectionEnd);
 
     if (activeCategory && start !== end) {
-      const newHighlight: Omit<Highlight, "id"> = {
+      const text = content.slice(start, end);
+
+      // 겹치는 태그 제거 (덮어쓰기)
+      const nonOverlapping = localHighlights.filter((hl) => {
+        return hl.endIndex <= start || hl.startIndex >= end;
+      });
+
+      const newTag: Omit<Highlight, "id"> = {
         category: activeCategory,
         startIndex: start,
         endIndex: end,
-        text: content.slice(start, end),
+        text: text,
       };
 
-      // (Problem 1 해결) API 즉시 호출 대신, 로컬 상태(localHighlights)를 업데이트
-      setLocalHighlights((prevHighlights) => {
-        // (Problem 3 해결) 겹치는 영역 덮어쓰기
-        const filteredHighlights = prevHighlights.filter(
-          (hl) => hl.startIndex >= end || hl.endIndex <= start // 겹치지 않는 것만 남김
-        );
-        return [...filteredHighlights, newHighlight];
-      });
-
+      setLocalHighlights([...nonOverlapping, newTag]);
       editorActions.setActiveCategory(null);
     }
   };
 
-  // 현재 시간 포맷팅
-  const { datePart, timePart, projectName } = useMemo(() => {
-    const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
+  // --- 핸들러: 로컬 태그 삭제 ---
+  const removeTagByStart = (startIndex: number) => {
+    if (mode !== "EDIT_TAGS") return;
+    setLocalHighlights((prev) =>
+      prev.filter((h) => h.startIndex !== startIndex)
+    );
+  };
 
-    // 1. 날짜 부분
+  // --- 시간 포맷팅 ---
+  const formattedTime = useMemo(() => {
+    const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
     const datePart = `${
       dateToFormat.getMonth() + 1
     }월 ${dateToFormat.getDate()}일 기록`;
-
-    // 2. 시간 부분
     const timePart = `${dateToFormat.getHours()}:${String(
       dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
-
-    let projName = "프로젝트";
-    if (noteData) {
-      // 1. ["projects"] 키로 캐시된 프로젝트 목록을 가져옴
-      const projects = queryClient.getQueryData<ProjectEvent[]>(["projects"]);
-
-      // 2. 목록에서 ID가 일치하는 프로젝트를 찾음
-      const project = projects?.find(
-        (p) => p.id === noteData.projectId // ⬅️ noteData.projectId는 string
-      );
-
-      if (project) {
-        projName = project.title;
-      }
-    }
-
-    return { datePart, timePart, projectName: projName };
-  }, [noteData, queryClient]);
+    return { datePart, timePart };
+  }, [noteData]);
 
   if (isLoadingNote && !noteData) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} width={335}>
-        <ContentContainer>
-          <div>노트 불러오는 중...</div>
-        </ContentContainer>
+        <div>Loading...</div>
       </Modal>
     );
   }
 
-  // disabeld 로직 변경
   const isMutating =
     updateMemoMutation.isPending ||
     createTaggingMutation.isPending ||
@@ -200,63 +177,99 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
       <CloseButton onClick={onClose}>
         <X size={24} />
       </CloseButton>
-      <ContentContainer>
-        <Header>[{projectName}]</Header>
-        <Header>
-          {/* 1. 날짜 부분 (기본 Header 스타일) */}
-          {datePart} {/* 2. 시간 부분 (새로운 TimeText 스타일) */}
-          <TimeText>{timePart}</TimeText>
-        </Header>
-        {/* 12. (수정) TagButtons 스타일 및 '+' 버튼 추가 */}
-        <TagButtons>
-          <TagButton
-            $active={activeCategory === "PROBLEM"}
-            onClick={() => editorActions.setActiveCategory("PROBLEM")}
-            color="#FFEC5E" // ⬅️ 노랑 (문제)
-          >
-            문제
-          </TagButton>
-          <TagButton
-            $active={activeCategory === "IDEA"}
-            onClick={() => editorActions.setActiveCategory("IDEA")}
-            color="#FF83CD" // ⬅️ 분홍 (아이디어)
-          >
-            아이디어
-          </TagButton>
-          <TagButton
-            $active={activeCategory === "SOLUTION"}
-            onClick={() => editorActions.setActiveCategory("SOLUTION")}
-            color="#89F3FF" // ⬅️ (해결)
-          >
-            해결
-          </TagButton>
-          {/* <AddTagButton onClick={() => alert("새 태그 추가 (미구현)")}>
-            <Plus size={16} />
-          </AddTagButton> */}
-        </TagButtons>
 
-        {/*에디터 래퍼 스타일*/}
+      <ContentContainer>
+        <Header>[{noteData?.projectId || "프로젝트"}]</Header>
+        <Header>
+          {formattedTime.datePart} <TimeText>{formattedTime.timePart}</TimeText>
+        </Header>
+
+        <TabContainer>
+          <TabButton
+            $active={mode === "EDIT_TEXT"}
+            onClick={() => setMode("EDIT_TEXT")}
+          >
+            글 수정
+          </TabButton>
+          <TabButton
+            $active={mode === "EDIT_TAGS"}
+            onClick={() => setMode("EDIT_TAGS")}
+          >
+            태그 달기
+          </TabButton>
+        </TabContainer>
+
+        {mode === "EDIT_TAGS" && (
+          <TagButtons>
+            <TagButton
+              $active={activeCategory === "PROBLEM"}
+              onClick={() => editorActions.setActiveCategory("PROBLEM")}
+              color="#FFEC5E"
+            >
+              문제
+            </TagButton>
+            <TagButton
+              $active={activeCategory === "IDEA"}
+              onClick={() => editorActions.setActiveCategory("IDEA")}
+              color="#FF83CD"
+            >
+              아이디어
+            </TagButton>
+            <TagButton
+              $active={activeCategory === "SOLUTION"}
+              onClick={() => editorActions.setActiveCategory("SOLUTION")}
+              color="#89F3FF"
+            >
+              해결
+            </TagButton>
+          </TagButtons>
+        )}
+        {mode === "EDIT_TEXT" && <div style={{ height: "32px" }} />}
+
         <EditorWrapper>
-          {/* 렌더러가 로컬 highlights 상태를 바라보도록 수정 */}
-          <HighlightRenderer content={content} highlights={localHighlights} />
+          {mode === "EDIT_TAGS" && (
+            <HighlightRenderer
+              content={content}
+              highlights={localHighlights}
+              onTagClick={removeTagByStart}
+            />
+          )}
           <NoteEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onSelect={handleTextSelect}
+            onChange={(e) => mode === "EDIT_TEXT" && setContent(e.target.value)}
+            onSelect={handleLocalCreateTag}
             spellCheck="false"
-            disabled={isMutating} // ⬅️ 로딩/저장 중 입력 방지
+            disabled={isMutating}
+            $isTagMode={mode === "EDIT_TAGS"}
+            // readOnly={mode === "EDIT_TAGS"} // readOnly를 쓰면 모바일에서 키보드가 안 뜸 (Good)
+            // 하지만 일부 브라우저에서 선택(드래그)도 막힐 수 있으므로 주의.
+            // 여기서는 onChange 제어로 처리함.
           />
         </EditorWrapper>
 
-        {/* Footer 버튼 스타일 */}
         <Footer>
-          <CancelButton onClick={onClose}>취소</CancelButton>
-          <SubmitButton
-            onClick={handleSubmit}
-            disabled={isMutating} // 로딩/저장 중 클릭 방지
-          >
-            {isMutating ? "저장 중..." : "완료"}
-          </SubmitButton>
+          {mode === "EDIT_TEXT" ? (
+            // 1. (수정) 글 수정 모드일 때: 취소 / 저장 버튼 (두 개로 나눔)
+            <>
+              <CancelButton onClick={() => setMode("EDIT_TAGS")}>
+                취소
+              </CancelButton>
+              <SubmitButton onClick={handleSaveText} disabled={isMutating}>
+                {updateMemoMutation.isPending ? "저장 중..." : "수정 완료"}
+              </SubmitButton>
+            </>
+          ) : (
+            // 2. (수정) 태그 모드일 때: 닫기 버튼 (SubmitButton 하나만 꽉 차게 사용하거나, FullWidthButton 사용)
+            // 여기서는 디자인 일관성을 위해 SubmitButton을 재활용하거나 FullWidthButton을 유지할 수 있습니다.
+            // 에러를 없애기 위해 SubmitButton을 활용하는 예시입니다.
+            <SubmitButton
+              onClick={handleSaveTagsAndClose}
+              disabled={isMutating}
+              style={{ gridColumn: "1 / -1" }} // ⬅️ 그리드 전체 너비 차지하게
+            >
+              {isMutating ? "저장 중..." : "저장 및 닫기"}
+            </SubmitButton>
+          )}
         </Footer>
       </ContentContainer>
     </Modal>
@@ -265,129 +278,126 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
 export default NoteDetailModal;
 
-const categoryColors = {
-  PROBLEM: "rgba(255, 236, 94, 0.7)", // #FFEC5E
-  IDEA: "rgba(255, 131, 205, 0.7)", // #FF83CD
-  SOLUTION: "rgba(137, 243, 255, 0.7)", // #89F3FF
+// --- Helper Components ---
+
+const categoryColors: Record<HighlightCategory, string> = {
+  PROBLEM: "rgba(255, 236, 94, 0.7)",
+  IDEA: "rgba(255, 131, 205, 0.7)",
+  SOLUTION: "rgba(137, 243, 255, 0.7)",
 };
 
-// 텍스트랑 하이라이트 배열 받아서
-// 형광팬이 칠해진 HTML을 렌더링
 const HighlightRenderer = ({
   content,
   highlights,
+  onTagClick,
 }: {
   content: string;
   highlights: (Highlight | Omit<Highlight, "id">)[];
+  onTagClick: (startIndex: number) => void;
 }) => {
-  // 하이라이트 시작 인덱스(startIndex) 기준으로 정렬
   const sortedHighlights = [...highlights].sort(
     (a, b) => a.startIndex - b.startIndex
   );
-
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
 
-  // 텍스트를 일반 텍스트와 하이라이트 조각으로 자르기
-  sortedHighlights.forEach((hl, i) => {
-    //하이라이트 전 '일반 텍스트' 추가
+  sortedHighlights.forEach((hl, idx) => {
     if (hl.startIndex > lastIndex) {
       parts.push(
-        <span key={`text-${i}`}>{content.slice(lastIndex, hl.startIndex)}</span>
+        <span key={`text-${lastIndex}`}>
+          {content.slice(lastIndex, hl.startIndex)}
+        </span>
       );
     }
-
-    // 하이라이트 텍스트 추가
     parts.push(
-      <HighlightMark key={`hl}-${i}`} category={hl.category}>
+      <HighlightMark
+        key={`mark-${hl.startIndex}-${idx}`}
+        category={hl.category}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          onTagClick(hl.startIndex);
+        }}
+      >
         {content.slice(hl.startIndex, hl.endIndex)}
       </HighlightMark>
     );
     lastIndex = hl.endIndex;
   });
 
-  // 마지막 하이라이트 이후의 '일반 텍스트' 추가
   if (lastIndex < content.length) {
-    parts.push(<span key="text-last">{content.slice(lastIndex)}</span>);
+    parts.push(<span key="text-end">{content.slice(lastIndex)}</span>);
   }
+
   return <RendererContainer>{parts}</RendererContainer>;
 };
 
-// 스타일 정의
+// --- Styles ---
 
-// 1. 텍스트 에디터와 렌더러를 겹치기 위한 래퍼
 const EditorWrapper = styled.div`
   position: relative;
   width: 100%;
   height: 200px;
-  border-radius: 12px; // ⬅️ 시안 적용
+  border-radius: 12px;
   background-color: white;
-  border: 1px solid #e0e0e0; // ⬅️ 연한 테두리
-  overflow: hidden; // ⬅️ 렌더러가 삐져나가지 않게
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
 `;
 
-// 2. (뒤) 하이라이트가 렌더링될 Div
 const RendererContainer = styled.div`
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1; // ⬅️ textarea보다 뒤에 위치
-
+  z-index: 1;
   width: 100%;
   height: 100%;
-  padding: 12px; // ⬅️ textarea와 동일한 패딩
-  font-size: 18px; // ⬅️ textarea와 동일한 폰트
-  line-height: 1.5; // ⬅️ textarea와 동일한 줄 간격 (필요시 조절)
-  box-sizing: border-box; // ⬅️ 패딩 포함 크기 계산
-  white-space: pre-wrap; // ⬅️ 줄바꿈(enter)을 렌더링
-
-  /* 사용자가 이 Div를 클릭/선택하지 못하게 함 */
+  padding: 12px;
+  font-size: 18px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  white-space: pre-wrap;
   pointer-events: none;
 `;
 
-// 3. (앞) 실제 입력을 받는 Textarea
-const NoteEditor = styled.textarea`
+const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 2; // ⬅️ 렌더러보다 앞에 위치
-
   width: 100%;
   height: 100%;
-  padding: 12px; // ⬅️ 렌더러와 동일한 패딩
-  font-size: 18px; // ⬅️ 렌더러와 동일한 폰트
-  line-height: 1.5; // ⬅️ 렌더러와 동일한 줄 간격 (필요시 조절)
+  padding: 12px;
+  font-size: 18px;
+  line-height: 1.5;
   box-sizing: border-box;
   resize: none;
   border: none;
   outline: none;
-
-  /* ⬇️ 핵심: 배경과 글자색을 투명하게 */
   background: transparent;
   color: transparent;
-
-  /* ⬇️ 커서(깜빡이) 색상은 보이게 */
   caret-color: black;
+
+  ${({ $isTagMode }) =>
+    $isTagMode &&
+    css`
+      z-index: 0;
+      color: transparent;
+    `}
+  ${({ $isTagMode }) =>
+    !$isTagMode &&
+    css`
+      z-index: 2;
+      color: black;
+    `}
 `;
 
-// 4. 하이라이트용 <mark> 태그
 const HighlightMark = styled.mark<{ category: HighlightCategory }>`
   background-color: ${({ category }) => categoryColors[category] || "yellow"};
   border-radius: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  &:hover {
+    filter: brightness(0.9);
+  }
 `;
-
-// const PageWrapper = styled.div`
-//   position: fixed;
-//   top: 0;
-//   left: 0;
-//   width: 100%;
-//   height: 100%;
-//   background-color: rgba(0, 0, 0, 0.4);
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-//   z-index: 100;
-// `;
 
 const TagButtons = styled.div`
   display: flex;
@@ -398,8 +408,8 @@ const TagButtons = styled.div`
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px; // ⬅️ 섹션 간 간격
-  margin-top: 30px; // ⬅️ 닫기 버튼과 간격
+  gap: 8px;
+  margin-top: 30px;
   font-family: ${({ theme }) => theme.fonts.primary};
 `;
 
@@ -411,23 +421,19 @@ const CloseButton = styled.button`
   border: none;
   cursor: pointer;
   z-index: 10;
-  color: #969696; // ⬅️ 시안의 'X'는 연함
+  color: #969696;
 `;
 
 const Header = styled.div`
   font-size: 20px;
   color: black;
   margin-top: -8px;
-  // text-align: center;
 `;
 
 const TimeText = styled.span`
-  /* 요청하신 스타일 적용 */
   font-size: 12px;
   padding-left: 4px;
   color: #969696;
-
-  /* 나머지 스타일은 Header와 동일하게 유지 */
   font-family: ${({ theme }) => theme.fonts.primary};
   font-weight: 400;
 `;
@@ -439,32 +445,10 @@ const TagButton = styled.button<{ $active: boolean; color: string }>`
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 14px;
   cursor: pointer;
-
-  /* 활성 상태 */
   background: ${({ $active, color }) => ($active ? color : "#EEEEEE")};
   color: ${({ $active }) => ($active ? "black" : "#969696")};
   border: 1px solid ${({ $active }) => ($active ? "#909090" : "#DDDDDD")};
-
-  /* 비활성 시 투명도 (선택적) */
-  /* opacity: ${({ $active }) => ($active ? 1 : 0.7)}; */
 `;
-
-// (신규) 태그 '+' 버튼
-// const AddTagButton = styled(TagButton).attrs({
-//   as: "button",
-//   $active: false,
-//   color: "#EEEEEE", // ⬅️ 비활성 스타일 강제
-// })`
-//   width: 32px;
-//   height: 32px;
-//   padding: 0;
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-//   flex-shrink: 0;
-//   color: #969696;
-//   border: 1px solid #dddddd;
-// `;
 
 const Footer = styled.div`
   display: grid;
@@ -485,13 +469,50 @@ const CancelButton = styled.button`
   cursor: pointer;
 `;
 
+// const FullWidthButton = styled.button`
+//   width: 100%;
+//   height: 48px;
+//   border-radius: 12px;
+//   background-color: ${({ theme }) => theme.colors.primary};
+//   color: white;
+//   border: none;
+//   font-size: 16px;
+//   font-weight: bold;
+//   cursor: pointer;
+//   font-family: ${({ theme }) => theme.fonts.primary};
+//   &:disabled {
+//     opacity: 0.5;
+//   }
+// `;
+
 const SubmitButton = styled(CancelButton)`
   background: ${({ theme }) => theme.colors.primary};
   border: none;
   color: white;
-
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  border: none;
+  background: none;
+  font-size: 16px;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: ${({ $active }) => ($active ? "bold" : "normal")};
+  color: ${({ $active, theme }) => ($active ? theme.colors.primary : "#999")};
+  cursor: pointer;
+  padding: 4px 8px;
+  border-bottom: 2px solid
+    ${({ $active, theme }) => ($active ? theme.colors.primary : "transparent")};
+  transition: all 0.2s;
 `;
