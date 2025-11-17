@@ -16,7 +16,7 @@ export const LogAcquiredModal = () => {
   const handleNavigate = () => {
     closeLogAcquiredModal(); // 모달 달기
     // navigate("/reviews"); // 태깅 완료 후 결과 페이지로 이동
-    router.navigate("/reviews");
+    router.navigate("/tags");
   };
 
   // 모달 안열려있으면 렌더링X
