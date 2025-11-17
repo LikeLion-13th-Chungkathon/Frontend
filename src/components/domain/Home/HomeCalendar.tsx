@@ -8,18 +8,6 @@ import TreeTrunkBg from "../../../assets/images/tree-trunk.png";
 
 type Value = Date | null | [Date | null, Date | null];
 
-// 헬퍼함수
-
-// YYYY-MM-DD 형식 날짜 문자열을 Date 객체로 반환
-// const parseDate = (dateStr: string): Date => {
-//   const [year, month, day] = dateStr.split("-").map(Number);
-//   return new Date(year, month - 1, day);
-// };
-
-// interface HomeCalendarProps {
-//   project: ProjectEvent;
-// }
-
 const HomeCalendar = () => {
   // zustand 상태 액션 가져오기
   const { selectedDate } = useCalendarStore();
@@ -73,6 +61,8 @@ const HomeCalendar = () => {
         formatDay={(_locale, date) => date.getDate().toString()} // '일' 제거
         calendarType="gregory"
         locale="ko-KR" // 한국어 설정
+        view="month" // 1. 항상 '월' 뷰만 보여줍니다.
+        onDrillUp={() => {}} // 2. 상위 뷰로 이동하는 동작을 막습니다.
       />
     </CalendarWrapper>
   );
