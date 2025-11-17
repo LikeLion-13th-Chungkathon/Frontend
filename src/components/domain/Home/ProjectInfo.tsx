@@ -212,8 +212,9 @@ const Title = styled.h2`
   color: ${({ theme }) => theme.colors.text};
   font-family: ${({ theme }) => theme.fonts.primary};
   margin: 0;
-  flex: 1;
+  flex: 0 1 auto; /* flex-shrink: 1 대신 더 명확한 flex 설정 */
   min-width: 0;
+  max-width: fit-content; /* 필요한 만큼만 차지 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
