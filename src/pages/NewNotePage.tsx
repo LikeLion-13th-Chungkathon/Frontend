@@ -153,6 +153,8 @@ const TextArea = styled.textarea`
   border-radius: 15px;
   background: #fff;
   padding: 9px 14px;
+
+  border: none;
 `;
 
 const MemoTitle = styled.div`
