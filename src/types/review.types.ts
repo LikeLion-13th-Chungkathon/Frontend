@@ -20,7 +20,7 @@ export interface ReviewData {
 
 // TagStatusSheet에 사용할 팀원 기여도 API 타입
 export interface ApiProjectContribution {
-  username: string;
+  nickname: string;
   role: string;
   total_logs: number;
   max_possible_logs: number;
