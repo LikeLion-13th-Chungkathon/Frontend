@@ -174,6 +174,8 @@ export const useCreateTaggingMutation = (memoId: string) => {
         offset_end: highlight.endIndex,
         tag_style: categoryToTagStyle(highlight.category),
       };
+
+      console.log("태깅 생성 요청 Payload:", JSON.stringify(payload, null, 2));
       const { data } = await axios.post<TaggingCreateResponse>(
         `/taggings/memo/${memoId}/`,
         payload
