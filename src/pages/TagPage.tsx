@@ -23,16 +23,30 @@ const TagPage = () => {
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
-  // 3. (추가) Zustand 스토어에서 현재 활성 프로젝트 ID 가져오기
+  // 1) 현재 활성 프로젝트 ID
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
-  // 4. (추가) 실제 API 호출
+
+  console.log("[TagPage] activeProjectId =", activeProjectId);
+
+  // 1-1) 프로젝트가 아직 선택 안 된 경우 → 그냥 안내만 띄우고 API 호출 안 함
+  if (!activeProjectId) {
+    return (
+      <Wrapper>
+        <HouseBackground>
+          <ProjectSelector />
+          <Title>먼저 프로젝트를 선택해주세요 🏠</Title>
+        </HouseBackground>
+      </Wrapper>
+    );
+  }
+
+  // 2) 리뷰 API 호출 (projectId가 있을 때만)
   const {
     data: reviewData,
     isLoading,
     isError,
   } = useReviewsQuery(activeProjectId);
 
-  console.log("[TagPage] activeProjectId =", activeProjectId);
   console.log("[TagPage] reviewData =", reviewData);
   console.log("[TagPage] isError =", isError);
 
@@ -43,7 +57,7 @@ const TagPage = () => {
     return LogHouseImg3;
   };
 
-  // API 데이터 기반으로 변수들 계산
+  // 3) API 데이터 기반으로 변수들 계산
   const { teamProgress, problemLogs, ideaLogs, solutionLogs } = useMemo(() => {
     if (!reviewData)
       return {
@@ -53,10 +67,9 @@ const TagPage = () => {
         solutionLogs: [],
       };
 
-    // 5-1. 하이라이트 배열을 카테고리별로 필터링
     const pLogs = reviewData.myHighlights
       .filter((h) => h.category === "PROBLEM")
-      .map((h) => ({ noteId: h.memoId! })); // ⬅️ TagResult가 원하는 타입으로 매핑
+      .map((h) => ({ noteId: h.memoId! }));
 
     const iLogs = reviewData.myHighlights
       .filter((h) => h.category === "IDEA")
@@ -74,13 +87,11 @@ const TagPage = () => {
     };
   }, [reviewData]);
 
-  // API에서 받은 진행률 사용
   const progressPercentage = teamProgress?.progressPercent || 0;
 
   const openSheet = () => setIsSheetOpen(true);
   const closeSheet = () => setIsSheetOpen(false);
 
-  // 통나무(개별 로그) 클릭 → noteId로 모달 열기
   const handleClickLog = (noteId: string) => {
     setSelectedNoteId(noteId);
     setIsNoteModalOpen(true);
@@ -95,18 +106,34 @@ const TagPage = () => {
   const user = useAuthStore((s) => s.user);
   const nickname = user?.name ?? "사용자";
 
-    // 8. (추가) 로딩 및 에러 처리
-    if (isLoading) return <Wrapper>Loading...</Wrapper>;
-    if (isError || !teamProgress || !reviewData) {
-        return <Wrapper>Error...</Wrapper>;
-    }
+  // 4) 로딩 / 에러 처리
+  if (isLoading) {
+    return (
+      <Wrapper>
+        <HouseBackground>
+          <ProjectSelector />
+          <Title>통나무집 로딩 중... 🔥</Title>
+        </HouseBackground>
+      </Wrapper>
+    );
+  }
+
+  if (isError || !teamProgress || !reviewData) {
+    return (
+      <Wrapper>
+        <HouseBackground>
+          <ProjectSelector />
+          <Title>회고 데이터를 불러오지 못했어요 🥲</Title>
+        </HouseBackground>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper>
       <HouseBackground>
         <ProjectSelector />
         <TitleContainer>
-          {/* 실제데이터로 교체 */}
           <Title>[{teamProgress.projectName}] 팀의 통나무집</Title>
           <CountContainer>
             <CountBox>
@@ -126,7 +153,9 @@ const TagPage = () => {
         </TitleContainer>
       </HouseBackground>
 
-      <Title>{nickname}의 [{teamProgress.projectName}] 회고</Title>
+      <Title>
+        {nickname}의 [{teamProgress.projectName}] 회고
+      </Title>
 
       <TagResultBox>
         <TagResult
@@ -152,15 +181,13 @@ const TagPage = () => {
       <TagStatusSheet
         open={isSheetOpen}
         onClose={closeSheet}
-        // 12. (수정) 실제 데이터 props로 전달
-        projectId={activeProjectId} // ⬅️ 시트가 API를 호출하도록 ID 전달
+        projectId={activeProjectId}
         projectTitle={teamProgress.projectName}
         progress={progressPercentage}
         totalRequiredLogs={teamProgress.totalLogsForCompletion}
         currentLogs={teamProgress.teamLogCount}
       />
 
-      {/* 개별 통나무 클릭시 노트 모달 */}
       <NoteDetailModal
         isOpen={isNoteModalOpen}
         noteId={selectedNoteId}
@@ -173,15 +200,15 @@ const TagPage = () => {
 export default TagPage;
 
 const Wrapper = styled.div`
-    width: 100%;
-    height: 100%;           // 부모(AppLayout)가 준 높이 꽉 채우기
-    display: flex;
-    flex-direction: column;
-    align-items: center;    // 가운데 정렬은 가로만
-    justify-content: flex-start; // 위에서부터 쌓이게
-    overflow-y: auto;       // 내용 길어지면 여기서 스크롤
-    padding-bottom: 68px;   // 바텀탭/네브에 안 가리게 여백
-    gap: 12px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding-bottom: 68px;
+  gap: 12px;
 `;
 
 const HouseBackground = styled.div`
@@ -190,7 +217,7 @@ const HouseBackground = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; // 위에서부터 쌓이게
+  justify-content: flex-start;
   flex-shrink: 0;
   margin-bottom: 20px;
 
@@ -204,7 +231,6 @@ const HouseBackground = styled.div`
     );
 
   background-size: 100%, cover;
-
   background-position: calc(50%) calc(100% - 64px), center;
 `;
 
@@ -243,26 +269,6 @@ const CountBox = styled.div`
   background: #fff;
 `;
 
-const LogHouseImg = styled.img`
-  margin-top: 28px;
-  margin-bottom: 24px;
-  width: 292px;
-  height: 210px;
-  transform: scale(1.05);
-  /* transform-origin: center; */
-  flex-shrink: 0;
-  aspect-ratio: 146/105;
-`;
-
-const TagResultBox = styled.div`
-  display: flex;
-  width: 352px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 4px;
-`;
-
 const CountTextBox = styled.div`
   display: flex;
   justify-content: center;
@@ -276,4 +282,23 @@ const CountTextBox = styled.div`
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+`;
+
+const LogHouseImg = styled.img`
+  margin-top: 28px;
+  margin-bottom: 24px;
+  width: 292px;
+  height: 210px;
+  transform: scale(1.05);
+  flex-shrink: 0;
+  aspect-ratio: 146 / 105;
+`;
+
+const TagResultBox = styled.div`
+  display: flex;
+  width: 352px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
 `;
