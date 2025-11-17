@@ -1,5 +1,6 @@
 // 달력 중심. 현재 유저가 보고있는/선택한 날짜를 전역 상태로 다루는 파일
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 // 오늘 날짜와 이달의 1일 YYYY-MM-DD 형식 구하기
 const today = new Date().toISOString().split("T")[0];
@@ -31,17 +32,24 @@ interface CalendarState {
   };
 }
 
-const useCalendarStore = create<CalendarState>((set) => ({
-  selectedDate: today,
-  currentMonth: firstDayOfMonth,
-  activeProjectId: null,
+const useCalendarStore = create<CalendarState>()(
+  persist(
+    (set) => ({
+      selectedDate: today,
+      currentMonth: firstDayOfMonth,
+      activeProjectId: null,
 
-  actions: {
-    setSelectedDate: (date) => set({ selectedDate: date }),
-    setCurrentMonth: (month) => set({ currentMonth: month }),
-    setActiveProjectId: (id) => set({ activeProjectId: id }),
-  },
-}));
+      actions: {
+        setSelectedDate: (date) => set({ selectedDate: date }),
+        setCurrentMonth: (month) => set({ currentMonth: month }),
+        setActiveProjectId: (id) => set({ activeProjectId: id }),
+      },
+    }),
+    {
+      name: "calendar-store", // localStorage key 이름
+    }
+  )
+);
 
 export const useCalendarActions = () =>
   useCalendarStore((state) => state.actions);
