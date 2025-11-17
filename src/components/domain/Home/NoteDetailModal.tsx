@@ -7,10 +7,15 @@ import {
   useCreateTaggingMutation,
   useDeleteTaggingMutation,
 } from "../../../lib/api/noteApi";
-import type { Highlight, HighlightCategory } from "../../../types";
+import type {
+  Highlight,
+  HighlightCategory,
+  ProjectEvent,
+} from "../../../types";
 import { X } from "lucide-react";
 import Modal from "../../common/Modal";
 import { useModalActions } from "../../../store/useModalStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 // --- 1. 모드 정의 ---
 type TabMode = "EDIT_TEXT" | "EDIT_TAGS";
@@ -24,6 +29,7 @@ interface NoteDetailModalProps {
 // 노트 페이지
 const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   // noteId로 노트 데이터를 "조회"
+  const queryClient = useQueryClient(); // ⬅️ queryClient 인스턴스
   const { data: noteData, isLoading: isLoadingNote } = useNoteByIdQuery(
     noteId,
     { enabled: isOpen && !!noteId }
@@ -148,16 +154,32 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   };
 
   // --- 시간 포맷팅 ---
-  const formattedTime = useMemo(() => {
+  const { datePart, timePart, projectName } = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
+
     const datePart = `${
       dateToFormat.getMonth() + 1
     }월 ${dateToFormat.getDate()}일 기록`;
     const timePart = `${dateToFormat.getHours()}:${String(
       dateToFormat.getMinutes()
     ).padStart(2, "0")}`;
-    return { datePart, timePart };
-  }, [noteData]);
+
+    // [핵심] 캐시된 프로젝트 목록에서 이름 찾기
+    let projName = "프로젝트";
+    if (noteData) {
+      // "projects" 키로 캐시된 데이터를 가져옵니다.
+      const projects = queryClient.getQueryData<ProjectEvent[]>(["projects"]);
+
+      // ID가 일치하는 프로젝트를 찾습니다.
+      const foundProject = projects?.find((p) => p.id === noteData.projectId);
+
+      if (foundProject) {
+        projName = foundProject.title;
+      }
+    }
+
+    return { datePart, timePart, projectName: projName };
+  }, [noteData, queryClient]); // queryClient 의존성 추가
 
   if (isLoadingNote && !noteData) {
     return (
@@ -179,9 +201,9 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
       </CloseButton>
 
       <ContentContainer>
-        <Header>[{noteData?.projectId || "프로젝트"}]</Header>
+        <Header>[{projectName}]</Header>
         <Header>
-          {formattedTime.datePart} <TimeText>{formattedTime.timePart}</TimeText>
+          {datePart} <TimeText>{timePart}</TimeText>
         </Header>
 
         <TabContainer>

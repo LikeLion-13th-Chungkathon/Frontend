@@ -48,7 +48,7 @@ const HomeCalendar = () => {
   return (
     <CalendarWrapper>
       <Calendar
-        value={new Date(selectedDate)} // 선택된 날짜 from store
+        value={selectedDate ? new Date(selectedDate) : new Date()} // 선택된 날짜 from store
         onChange={handleDateChange} // 날짜 클릭 핸들러
         onActiveStartDateChange={handleMonthChange}
         showFixedNumberOfWeeks
