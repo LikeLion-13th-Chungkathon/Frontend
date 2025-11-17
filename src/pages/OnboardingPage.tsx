@@ -83,7 +83,7 @@ const OnboardingPage = () => {
       console.log("구글 회원가입 완료:", res.data);
 
       // swagger 기준으로 응답 구조 맞춰서 수정
-      const { email, nickname: finalNickname, token, user } = res.data;
+      const { token, user } = res.data;
 
       // access token 저장 (refresh는 서버에서 쿠키로 줄 수도 있음)
       const accessToken = token?.access_token;
@@ -92,6 +92,8 @@ const OnboardingPage = () => {
       }
 
       const id = user?.id?.toString?.() ?? "";
+      const email = user.email;
+      const finalNickname = user.nickname;
 
       setUser({ id, name: finalNickname, email });
       setPendingGoogleUser(null);
