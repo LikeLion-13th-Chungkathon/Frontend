@@ -75,12 +75,30 @@ export default function CreateProjectModal({
                   date_end: endDate,
                 };
 
-                const { project, inviteCode } =
-                  await createMutation.mutateAsync(apiPayload); // ⬅️ 매핑된 객체 전달
+                try {
+                  // API 호출
+                  const { project, inviteCode } =
+                    await createMutation.mutateAsync(apiPayload);
 
-                setActiveProjectId(project.id);
-                setInviteCode(inviteCode); // ⬅️ (수정) 응답으로 받은 inviteCode 사용
-                setStep("invite");
+                  // 성공 시 로직
+                  setActiveProjectId(project.id);
+                  setInviteCode(inviteCode);
+                  setStep("invite");
+                } catch (error: any) {
+                  // 실패 시 에러 처리
+                  console.error("프로젝트 생성 실패:", error);
+
+                  // 백엔드에서 보내준 에러 메시지가 있으면 띄우고, 없으면 기본 메시지
+                  // (error.response.data.error 또는 error.message 등 구조에 맞게 사용)
+                  // axios 에러인 경우:
+                  const errorMsg =
+                    error.response?.data?.error ||
+                    error.response?.data?.message ||
+                    "프로젝트 생성 중 오류가 발생했습니다.";
+
+                  alert(errorMsg);
+                }
+                // ⬆️ ⬆️ ⬆️ 에러 핸들링 추가 ⬆️ ⬆️ ⬆️
               }}
               onClose={onClose}
             />
