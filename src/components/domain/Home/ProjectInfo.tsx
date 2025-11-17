@@ -2,6 +2,7 @@ import styled from "styled-components";
 import type { ProjectEvent } from "../../../types";
 import PersonIcon from "../../../assets/images/human-Img.svg";
 import FlameIcon from "../../../assets/images/fire-img.svg";
+import { useProjectMembersQuery } from "../../../lib/api/projectApi";
 
 // 프로젝트 인포 컴포넌트
 
@@ -56,6 +57,11 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
   const dDay = calculateDday(project.endDate);
   const progressPercent = calculateProgress(project.startDate, project.endDate);
 
+  // project.id를 사용하여 API를 호출합니다.
+  const { data: members } = useProjectMembersQuery(project.id);
+  // 멤버 수 계산 (데이터가 없으면 기본값 1 또는 project.memberCount 사용)
+  const memberCount = members ? members.length : project.memberCount;
+
   // 1. InviteCodeView의 복사 로직을 가져옵니다.
   const handleTitleClick = async () => {
     // 2. project.inviteCode가 있는지 확인합니다.
@@ -81,7 +87,7 @@ const ProjectInfo = ({ project }: ProjectInfoProps) => {
         <InfoPeriodText>{period}</InfoPeriodText>
         <InfoDDayChip>{dDay}</InfoDDayChip>
         <InfoPersonInfo>
-          <img src={PersonIcon} alt="인원" /> {project.memberCount}
+          <img src={PersonIcon} alt="인원" /> {memberCount}
         </InfoPersonInfo>
       </InfoRow>
 

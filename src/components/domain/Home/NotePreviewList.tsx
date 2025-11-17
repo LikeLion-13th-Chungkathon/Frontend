@@ -155,8 +155,12 @@ const CardContent = styled.p`
   /* ⬇️ 텍스트 길이에 따라 높이가 유동적으로 변하도록 pre-wrap 유지 */
   white-space: pre-wrap;
 
-  /* 텍스트가 너무 길어질 때를 대비 (선택적) */
-  word-break: break-all;
+  /* 최대 2줄까지만 표시하고 말줄임표(...) 처리 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* ⬅️ 원하는 줄 수 (여기서는 2줄) */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const Timestamp = styled.span`
