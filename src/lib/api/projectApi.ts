@@ -16,6 +16,8 @@ export interface ApiProject {
   owner: number;
   invite_code: string;
   created_at: string;
+
+  member_count?: number;
 }
 
 // 2. POST /projects/ 요청 객체
@@ -39,6 +41,14 @@ export interface JoinProjectResponse {
     role: string;
     joined_at: string;
   };
+}
+
+// 맴버 조회 API 응답 타입 정의 /account/team/members/list/
+export interface ApiTeamMember {
+  user: number;
+  project: number;
+  role: string; // "Member" | "Admin" 등
+  joined_at: string;
 }
 
 // 프로젝트 목록 조회 (GET/projects/)
@@ -106,5 +116,24 @@ export const useJoinProjectMutation = () => {
       // 프로젝트 목록 다시 불러오기
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
+  });
+};
+
+// 특정 프로젝트 맴버 목록 조회 (GET /account/team/members/list)
+export const useProjectMembersQuery = (projectId: string | null) => {
+  return useQuery({
+    queryKey: ["projectMembers", projectId], // 쿼리 키: ["projectMembers", "12"]
+    queryFn: async () => {
+      // API 호출: /account/team/members/list/?project_id=12
+      const { data } = await axios.get<{ results: ApiTeamMember[] }>(
+        "/account/team/members/list/",
+        {
+          params: { project_id: projectId },
+        }
+      );
+      return data.results; // 멤버 배열 반환
+    },
+    enabled: !!projectId, // projectId가 있을 때만 호출
+    staleTime: 1000 * 60 * 5, // 5분간 캐시 (멤버가 자주 바뀌진 않으므로)
   });
 };
