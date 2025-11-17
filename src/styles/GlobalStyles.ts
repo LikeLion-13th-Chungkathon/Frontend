@@ -5,8 +5,8 @@ import { createGlobalStyle } from "styled-components";
 import normalize from "styled-normalize";
 
 const GlobalStyle = createGlobalStyle`
-  /* (수정) .ttf 경로 대신, 이 표준 CDN을 사용 */
-  @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2/LeeSeoyun.css');
+  // 폰트는 index.html로 옮김
+  // @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2202-2/LeeSeoyun.css');
 
   // 이서윤체 로컬로 불러오는거 삭제
   // @font-face {
