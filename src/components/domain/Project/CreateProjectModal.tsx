@@ -6,6 +6,7 @@ import MemberForm from "./MemberForm";
 import InviteCodeView from "./InviteCodeView";
 import { useCreateProjectMutation } from "../../../lib/api/projectApi";
 import { useCalendarActions } from "../../../store/useCalendarStore";
+import type { AxiosError } from "axios";
 
 export default function CreateProjectModal({
   isOpen,
@@ -84,21 +85,49 @@ export default function CreateProjectModal({
                   setActiveProjectId(project.id);
                   setInviteCode(inviteCode);
                   setStep("invite");
-                } catch (error: any) {
+                } catch (e) {
                   // 실패 시 에러 처리
+                  const error = e as AxiosError<any>; // 2. 에러 타입 단언
                   console.error("프로젝트 생성 실패:", error);
 
-                  // 백엔드에서 보내준 에러 메시지가 있으면 띄우고, 없으면 기본 메시지
-                  // (error.response.data.error 또는 error.message 등 구조에 맞게 사용)
-                  // axios 에러인 경우:
-                  const errorMsg =
-                    error.response?.data?.error ||
-                    error.response?.data?.message ||
-                    "프로젝트 생성 중 오류가 발생했습니다.";
+                  if (error.response) {
+                    const { status, data } = error.response;
 
-                  alert(errorMsg);
+                    // 3. 400 Bad Request 처리
+                    if (status === 400 && data) {
+                      // Case A: 날짜 오류 (invalid_date)
+                      if (data.invalid_date) {
+                        alert(data.invalid_date.error);
+                        return;
+                      }
+
+                      // Case B: 이름 길이 오류 (limit_project_name)
+                      if (data.limit_project_name) {
+                        alert(data.limit_project_name.error);
+                        return;
+                      }
+
+                      // Case C: 그 외 400 에러 (일반적인 메시지가 올 경우 대비)
+                      if (data.message) {
+                        alert(data.message);
+                        return;
+                      }
+
+                      // Case D: 백엔드에서 예상치 못한 키를 보냈을 때
+                      alert("입력값이 올바르지 않습니다. 다시 확인해주세요.");
+                    }
+                    // 4. 500 등 서버 오류 처리
+                    else {
+                      alert(
+                        "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+                      );
+                    }
+                  } else {
+                    // 5. 네트워크 오류 (서버 응답 없음)
+                    alert("네트워크 연결을 확인해주세요.");
+                  }
+                  // ⬆️ ⬆️ ⬆️ 에러 핸들링 로직 수정 ⬆️ ⬆️ ⬆️
                 }
-                // ⬆️ ⬆️ ⬆️ 에러 핸들링 추가 ⬆️ ⬆️ ⬆️
               }}
               onClose={onClose}
             />
