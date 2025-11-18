@@ -110,10 +110,31 @@ const TagPage = () => {
   // console.log("[TagPage] nickname used in title =", nickname);
 
   // 로딩 / 에러 처리에서 myInfo까지 같이 봐주기
-  if (isMyLoading || isLoading) return <Wrapper>Loading...</Wrapper>;
-  if (isMyError || !me || isError || !teamProgress || !reviewData) {
-    return <Wrapper>Error...</Wrapper>;
+  // if (isMyLoading || isLoading) return <Wrapper>Loading...</Wrapper>;
+  // if (isMyError || !me || isError || !teamProgress || !reviewData) {
+  //   return <Wrapper>Error...</Wrapper>;
+  // }
+
+  // 1) 유저 정보 로딩
+  if (isMyLoading) return <Wrapper>Loading...</Wrapper>;
+
+  // 2) 유저 정보 에러
+  if (isMyError || !me) return <Wrapper>유저 정보 에러</Wrapper>;
+
+  // 3) 아직 활성 프로젝트가 없거나 / 리뷰가 아직 안 온 상태
+  //   → 상단에 ProjectSelector만 보여주기 (홈이랑 느낌 같게)
+  if (!activeProjectId || isLoading || !reviewData || !teamProgress) {
+    return (
+      <Wrapper>
+        <HouseBackground>
+          <ProjectSelector />
+        </HouseBackground>
+      </Wrapper>
+    );
   }
+
+  // 4) 진짜 API 에러일 때만 Error...
+  if (isError) return <Wrapper>Error...</Wrapper>;
 
   const nickname = me.nickname;
 
