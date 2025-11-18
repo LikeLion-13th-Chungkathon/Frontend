@@ -425,34 +425,35 @@ const EditorWrapper = styled.div`
   overflow: hidden;
 `;
 
+const textStyles = css`
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: 0px; /* ⬅️ 추가: 글자 간격 고정 */
+  padding: 12px;
+  margin: 0;
+  border: none;
+  box-sizing: border-box;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+
+  width: 100%;
+  height: 100%;
+`;
+
 const RendererContainer = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1;
-  width: 100%;
-  height: 100%;
-  padding: 12px;
-  font-size: 18px;
-  line-height: 1.5;
-  box-sizing: border-box;
-  white-space: pre-wrap;
-  pointer-events: none;
 
-  /* ⬇️ 중요: 패딩 설정 */
-  padding: 12px;
-
-  /* ⬇️ 중요: 스크롤바 공간 확보를 위해 항상 스크롤바 표시 (내용 없어도) */
-  overflow-y: scroll;
+  /* ⬇️ 공통 스타일 적용 */
+  ${textStyles}
 
   pointer-events: none;
-  font-family: ${({ theme }) => theme.fonts.primary};
-
-  /* ⬇️ ⬇️ [수정] 줄바꿈 규칙 통일 ⬇️ ⬇️ */
-  white-space: pre-wrap; /* 공백과 줄바꿈 유지, 필요시 자동 줄바꿈 */
-  word-break: break-word; /* 단어 단위로 줄바꿈 (break-all 대신 권장) */
-  overflow-wrap: break-word; /* (최신 표준) */
-  /* ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ */
+  overflow-y: scroll; /* 스크롤바 공간 확보 */
 
   &::-webkit-scrollbar {
     display: none;
@@ -464,28 +465,16 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
 
-  /* ⬇️ 중요: 렌더러와 동일한 패딩 */
-  padding: 12px;
+  /* ⬇️ 공통 스타일 적용 */
+  ${textStyles}
 
-  font-size: 18px;
-  line-height: 1.5;
-  box-sizing: border-box;
   resize: none;
-  border: none;
   outline: none;
   background: transparent;
   color: transparent;
   caret-color: black;
-  font-family: ${({ theme }) => theme.fonts.primary};
-
-  /* ⬇️ ⬇️ [수정] 줄바꿈 규칙 통일 ⬇️ ⬇️ */
-  white-space: pre-wrap;
-  word-break: break-word; /* break-all -> break-word로 변경 */
-  overflow-wrap: break-word;
-  /* ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ */
+  overflow-y: scroll; /* 스크롤바 공간 확보 */
 
   ${({ $isTagMode }) =>
     $isTagMode &&
