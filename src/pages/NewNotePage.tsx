@@ -46,6 +46,12 @@ const NewNotePage = () => {
     }
   }, [location.search, setSelectedDate]);
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    // 500자보다 길면 자릅니다.
+    setContent(val.length > 500 ? val.slice(0, 500) : val);
+  };
+
   const handleSave = () => {
     if (!activeProjectId || !content) return;
 
@@ -97,11 +103,15 @@ const NewNotePage = () => {
         <ScrollBackground>
           <ScrollContent>
             <MemoTitle>{formatKoreanDate(selectedDate)}</MemoTitle>
-            <TextArea
-              placeholder="입력해주세요"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
+            <TextAreaWrapper>
+              <TextArea
+                placeholder="입력해주세요"
+                value={content}
+                onChange={handleContentChange}
+                maxLength={500}
+              />
+              <PageCharCount>{content.length} / 500</PageCharCount>
+            </TextAreaWrapper>
           </ScrollContent>
         </ScrollBackground>
 
@@ -146,15 +156,15 @@ const ScrollBackground = styled.div`
 `;
 
 const TextArea = styled.textarea`
-  /* flex: 1; */
-  width: 206px;
-  height: 257px;
-  flex-shrink: 0;
+  width: 100%; /* 206px -> 100% */
+  height: 100%; /* 257px -> 100% */
   border-radius: 15px;
   background: #fff;
-  padding: 9px 14px;
-
-  border: none;
+  padding: 9px 14px 24px 14px; /* ⬅️ 하단 패딩을 늘려 카운터 공간 확보 */
+  border: 1px solid #ddd;
+  resize: none;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  outline: none;
 `;
 
 const MemoTitle = styled.div`
@@ -190,4 +200,21 @@ const ScrollContent = styled.div`
   width: 206px; /* TextArea와 동일 폭 */
   margin-top: 64px;
   align-items: center;
+`;
+
+const TextAreaWrapper = styled.div`
+  position: relative;
+  width: 206px;
+  height: 257px;
+  flex-shrink: 0;
+`;
+
+const PageCharCount = styled.div`
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  font-size: 12px;
+  color: #999;
+  pointer-events: none;
+  font-family: ${({ theme }) => theme.fonts.primary};
 `;
