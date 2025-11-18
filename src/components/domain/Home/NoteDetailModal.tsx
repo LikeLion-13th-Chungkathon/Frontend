@@ -425,22 +425,20 @@ const EditorWrapper = styled.div`
   overflow: hidden;
 `;
 
-const textStyles = css`
-  font-family: ${({ theme }) => theme.fonts.primary};
-  font-size: 18px;
-  line-height: 1.5;
-  letter-spacing: 0px; /* ⬅️ 추가: 글자 간격 고정 */
-  padding: 12px;
-  margin: 0;
-  border: none;
-  box-sizing: border-box;
+const hideScrollbar = css`
+  overflow-y: auto; /* 스크롤 기능은 켜둠 */
 
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  /* 크롬, 사파리, 엣지: 스크롤바 영역을 아예 없앰 */
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0px;
+  }
 
-  width: 100%;
-  height: 100%;
+  /* 파이어폭스 */
+  scrollbar-width: none;
+
+  /* IE, 구형 엣지 */
+  -ms-overflow-style: none;
 `;
 
 const RendererContainer = styled.div`
@@ -448,33 +446,55 @@ const RendererContainer = styled.div`
   top: 0;
   left: 0;
   z-index: 1;
+  width: 100%;
+  height: 100%;
 
-  /* ⬇️ 공통 스타일 적용 */
-  ${textStyles}
+  /* 텍스트 스타일 완벽 일치 */
+  padding: 12px;
+  font-size: 18px;
+  line-height: 1.5;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  letter-spacing: 0px;
+  box-sizing: border-box;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 
   pointer-events: none;
-  overflow-y: scroll; /* 스크롤바 공간 확보 */
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  scrollbar-width: none;
+  /* ⬇️ 여기에 적용! */
+  ${hideScrollbar}
 `;
 
 const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
 
-  /* ⬇️ 공통 스타일 적용 */
-  ${textStyles}
+  /* 텍스트 스타일 완벽 일치 */
+  padding: 12px;
+  font-size: 18px;
+  line-height: 1.5;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  letter-spacing: 0px;
+  box-sizing: border-box;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 
   resize: none;
+  border: none;
   outline: none;
   background: transparent;
   color: transparent;
   caret-color: black;
-  overflow-y: scroll; /* 스크롤바 공간 확보 */
+
+  /* ⬇️ 여기에 적용! */
+  ${hideScrollbar}
 
   ${({ $isTagMode }) =>
     $isTagMode &&
