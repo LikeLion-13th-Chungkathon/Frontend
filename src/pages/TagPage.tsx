@@ -127,8 +127,10 @@ const TagPage = () => {
     return (
       <Wrapper>
         <HouseBackground>
-          <ProjectSelector />
+            <ProjectSelector />
+            <EmptyHouseSpace /> 
         </HouseBackground>
+        <EmptyReviewText>작성된 회고가 없습니다.</EmptyReviewText>
       </Wrapper>
     );
   }
@@ -315,4 +317,21 @@ const CountTextBox = styled.div`
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+`;
+
+const EmptyHouseSpace = styled.div`
+  width: 100%;
+  height: 260px;
+  flex-shrink: 0;
+`;
+
+const EmptyReviewText = styled.div`
+  color: #969696;
+  text-align: center;
+  font-family: LeeSeoyun;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  margin-bottom: 8px;
 `;
