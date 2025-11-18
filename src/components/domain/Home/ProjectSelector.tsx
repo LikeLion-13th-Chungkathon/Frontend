@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useProjectsQuery } from "../../../lib/api/projectApi";
 import useCalendarStore, {
@@ -38,6 +38,12 @@ const ProjectSelector = () => {
   //Zustand 활성 프로젝트 ID
   const activeProjectId = useCalendarStore((state) => state.activeProjectId);
   const { setActiveProjectId } = useCalendarActions();
+
+  useEffect(() => {
+    if (!isLoading && projects && projects.length > 0 && !activeProjectId) {
+      setActiveProjectId(projects[0].id);
+    }
+  }, [isLoading, projects, activeProjectId, setActiveProjectId]);
 
   return (
     <Wrapper>
