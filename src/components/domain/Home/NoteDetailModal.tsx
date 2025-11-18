@@ -6,6 +6,7 @@ import {
   useUpdateMemoMutation,
   useCreateTaggingMutation,
   useDeleteTaggingMutation,
+  useDeleteAllTaggingsMutation,
 } from "../../../lib/api/noteApi";
 import type {
   Highlight,
@@ -39,6 +40,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   const updateMemoMutation = useUpdateMemoMutation(noteId!);
   const createTaggingMutation = useCreateTaggingMutation(noteId!);
   const deleteTaggingMutation = useDeleteTaggingMutation();
+  const deleteAllTaggingsMutation = useDeleteAllTaggingsMutation(noteId!); // ⬅️ 2. 훅 사용
 
   const { openLogAcquiredModal } = useModalActions();
   const { activeCategory, actions: editorActions } = useEditorStore();
@@ -63,15 +65,27 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   }, [noteData]);
 
   // --- 핸들러: 텍스트 저장 ---
-  const handleSaveText = () => {
+  const handleSaveText = async () => {
     if (!noteData) return;
+
+    // 변경사항이 있을 때만 실행
     if (content !== noteData.content) {
-      updateMemoMutation.mutate(
-        { content, memo: noteData },
-        {
-          onSuccess: () => setMode("EDIT_TAGS"),
-        }
-      );
+      try {
+        // A. 텍스트 수정 API 호출
+        await updateMemoMutation.mutateAsync({ content, memo: noteData });
+
+        // B. (추가) 모든 태그 삭제 API 호출 (초기화)
+        await deleteAllTaggingsMutation.mutateAsync();
+
+        // C. 로컬 상태 초기화
+        setLocalHighlights([]);
+
+        alert("내용이 수정되었으며, 태그가 초기화되었습니다.");
+        setMode("EDIT_TAGS");
+      } catch (e) {
+        console.error(e);
+        alert("저장 중 오류가 발생했습니다.");
+      }
     } else {
       setMode("EDIT_TAGS");
     }
@@ -192,7 +206,8 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   const isMutating =
     updateMemoMutation.isPending ||
     createTaggingMutation.isPending ||
-    deleteTaggingMutation.isPending;
+    deleteTaggingMutation.isPending ||
+    deleteAllTaggingsMutation.isPending;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width={335}>
@@ -224,38 +239,35 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           </TabButton>
         </TabContainer>
 
-        {mode === "EDIT_TAGS" && (
-          <TagButtons>
-            <TagButton
-              $active={activeCategory === "PROBLEM"}
-              onClick={() => editorActions.setActiveCategory("PROBLEM")}
-              color="#FFEC5E"
-            >
-              문제
-            </TagButton>
-            <TagButton
-              $active={activeCategory === "IDEA"}
-              onClick={() => editorActions.setActiveCategory("IDEA")}
-              color="#FF83CD"
-            >
-              아이디어
-            </TagButton>
-            <TagButton
-              $active={activeCategory === "SOLUTION"}
-              onClick={() => editorActions.setActiveCategory("SOLUTION")}
-              color="#89F3FF"
-            >
-              해결
-            </TagButton>
-          </TagButtons>
-        )}
-        {mode === "EDIT_TEXT" && (
-          <WarningText>주의: 글을 수정하면 태깅이 초기화됩니다</WarningText>
-        )}
-        {/* 태그 모드일 때 높이 맞춤용 여백 (WarningText 높이만큼) */}
-        {mode === "EDIT_TAGS" && (
-          <div style={{ height: "20px", marginBottom: "8px" }} />
-        )}
+        <ControlArea>
+          {mode === "EDIT_TAGS" ? (
+            <TagButtons>
+              <TagButton
+                $active={activeCategory === "PROBLEM"}
+                onClick={() => editorActions.setActiveCategory("PROBLEM")}
+                color="#FFEC5E"
+              >
+                문제
+              </TagButton>
+              <TagButton
+                $active={activeCategory === "IDEA"}
+                onClick={() => editorActions.setActiveCategory("IDEA")}
+                color="#FF83CD"
+              >
+                아이디어
+              </TagButton>
+              <TagButton
+                $active={activeCategory === "SOLUTION"}
+                onClick={() => editorActions.setActiveCategory("SOLUTION")}
+                color="#89F3FF"
+              >
+                해결
+              </TagButton>
+            </TagButtons>
+          ) : (
+            <WarningText>주의: 글을 수정하면 태깅이 초기화됩니다</WarningText>
+          )}
+        </ControlArea>
 
         <EditorWrapper>
           {mode === "EDIT_TAGS" && (
@@ -363,13 +375,21 @@ const HighlightRenderer = ({
 
 // --- Styles ---
 
+const ControlArea = styled.div`
+  height: 40px; /* 태그 버튼 높이(32px) + 여백 고려해서 고정 */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  margin-bottom: 8px;
+`;
+
 const WarningText = styled.div`
-    font-size: 12px;
-    #969696;
-    text-align: center;
-    margin-bottom: 8px;
-    font-weight: 500;
-    height: 20px; // 높이 고정 (레이아웃 흔들림 방지)
+  font-size: 12px;
+  color: #969696;
+  font-weight: 500;
+  /* 주의 문구 중앙 정렬이 필요하면 width 100% + text-align center */
+  width: 100%;
+  text-align: center;
 `;
 
 const EditorWrapper = styled.div`
@@ -554,4 +574,9 @@ const TabButton = styled.button<{ $active: boolean }>`
   border-bottom: 2px solid
     ${({ $active, theme }) => ($active ? theme.colors.primary : "transparent")};
   transition: all 0.2s;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;

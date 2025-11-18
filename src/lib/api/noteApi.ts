@@ -233,3 +233,21 @@ export const useDeleteTaggingMutation = () => {
     },
   });
 };
+
+/**
+ * 8. (신규) 메모의 모든 태깅 삭제 (DELETE /taggings/memo/{memo_id}/)
+ */
+export const useDeleteAllTaggingsMutation = (memoId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await axios.delete(`/taggings/memo/${memoId}/`);
+      return data;
+    },
+    onSuccess: () => {
+      // 태깅 삭제 후 관련 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ["notes", memoId] });
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    },
+  });
+};
