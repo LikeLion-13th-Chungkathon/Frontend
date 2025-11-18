@@ -285,7 +285,7 @@ const CountBox = styled.div`
 
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
 `;
 
