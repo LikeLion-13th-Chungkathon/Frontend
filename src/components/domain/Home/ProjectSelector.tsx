@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useProjectsQuery } from "../../../lib/api/projectApi";
 import useCalendarStore, {
@@ -13,6 +13,16 @@ const ProjectSelector = () => {
 
   // React Query로 프로젝트 목록 가져오기
   const { data: projects, isLoading } = useProjectsQuery();
+
+  //Zustand 활성 프로젝트 ID
+  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
+  const { setActiveProjectId } = useCalendarActions();
+
+  useEffect(() => {
+    if (!isLoading && projects && projects.length > 0 && !activeProjectId) {
+      setActiveProjectId(projects[0].id);
+    }
+  }, [isLoading, projects, activeProjectId, setActiveProjectId]);
 
   if (!isLoading && (!projects || projects.length === 0)) {
     return (
@@ -34,10 +44,6 @@ const ProjectSelector = () => {
   if (isLoading) {
     return <Wrapper>프로젝트 로딩 중...</Wrapper>;
   }
-
-  //Zustand 활성 프로젝트 ID
-  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
-  const { setActiveProjectId } = useCalendarActions();
 
   return (
     <Wrapper>
@@ -138,7 +144,11 @@ const AddButton = styled.button`
 // (기능 2) 프로젝트 없을 때 UI
 // Empty State 스타일
 const EmptyWrapper = styled.div`
-  width: 100%;
+  /* width: 100%; */
+  width: 335px;
+  height: 115px;
+  flex-shrink: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -146,12 +156,13 @@ const EmptyWrapper = styled.div`
   gap: 16px;
   padding: 24px 16px;
   box-sizing: border-box;
-  min-height: 130px;
+  /* min-height: 130px; */
 
   background-color: #fff7ed;
   border: 2px solid #ca8853;
   border-radius: 12px;
-  margin: 12px 16px;
+  /* margin: 12px 16px; */
+  margin: 12px auto;
 `;
 
 const EmptyText = styled.div`

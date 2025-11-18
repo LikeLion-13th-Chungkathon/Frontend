@@ -110,10 +110,33 @@ const TagPage = () => {
   // console.log("[TagPage] nickname used in title =", nickname);
 
   // 로딩 / 에러 처리에서 myInfo까지 같이 봐주기
-  if (isMyLoading || isLoading) return <Wrapper>Loading...</Wrapper>;
-  if (isMyError || !me || isError || !teamProgress || !reviewData) {
-    return <Wrapper>Error...</Wrapper>;
+  // if (isMyLoading || isLoading) return <Wrapper>Loading...</Wrapper>;
+  // if (isMyError || !me || isError || !teamProgress || !reviewData) {
+  //   return <Wrapper>Error...</Wrapper>;
+  // }
+
+  // 1) 유저 정보 로딩
+  if (isMyLoading) return <Wrapper>Loading...</Wrapper>;
+
+  // 2) 유저 정보 에러
+  if (isMyError || !me) return <Wrapper>유저 정보 에러</Wrapper>;
+
+  // 3) 아직 활성 프로젝트가 없거나 / 리뷰가 아직 안 온 상태
+  //   → 상단에 ProjectSelector만 보여주기 (홈이랑 느낌 같게)
+  if (!activeProjectId || isLoading || !reviewData || !teamProgress) {
+    return (
+      <Wrapper>
+        <HouseBackground>
+            <ProjectSelector />
+            <EmptyHouseSpace /> 
+        </HouseBackground>
+        <EmptyReviewText>작성된 회고가 없습니다.</EmptyReviewText>
+      </Wrapper>
+    );
   }
+
+  // 4) 진짜 API 에러일 때만 Error...
+  if (isError) return <Wrapper>Error...</Wrapper>;
 
   const nickname = me.nickname;
 
@@ -253,12 +276,17 @@ const CountContainer = styled.div`
 `;
 
 const CountBox = styled.div`
-  width: 46px;
-  height: 23px;
+  /* width: 46px; */
+  /* height: 23px; */
   flex-shrink: 0;
   border-radius: 11.5px;
   border: 1px solid var(--main, #ca8853);
   background: #fff;
+
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
 `;
 
 const LogHouseImg = styled.img`
@@ -285,7 +313,7 @@ const CountTextBox = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 
   color: #684f3c;
   text-align: center;
@@ -293,5 +321,24 @@ const CountTextBox = styled.div`
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
+  /* line-height: normal; */
+
+  line-height: 1;
+`;
+
+const EmptyHouseSpace = styled.div`
+  width: 100%;
+  height: 260px;
+  flex-shrink: 0;
+`;
+
+const EmptyReviewText = styled.div`
+  color: #969696;
+  text-align: center;
+  font-family: LeeSeoyun;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
   line-height: normal;
+  margin-bottom: 8px;
 `;

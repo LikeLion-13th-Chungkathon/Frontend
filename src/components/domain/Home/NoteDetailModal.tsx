@@ -6,7 +6,9 @@ import {
   useUpdateMemoMutation,
   useCreateTaggingMutation,
   useDeleteTaggingMutation,
+  useDeleteAllTaggingsMutation,
 } from "../../../lib/api/noteApi";
+import { useRef } from "react";
 import type {
   Highlight,
   HighlightCategory,
@@ -39,12 +41,15 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   const updateMemoMutation = useUpdateMemoMutation(noteId!);
   const createTaggingMutation = useCreateTaggingMutation(noteId!);
   const deleteTaggingMutation = useDeleteTaggingMutation();
+  const deleteAllTaggingsMutation = useDeleteAllTaggingsMutation(noteId!); // ⬅️ 2. 훅 사용
 
   const { openLogAcquiredModal } = useModalActions();
   const { activeCategory, actions: editorActions } = useEditorStore();
 
   const [mode, setMode] = useState<TabMode>("EDIT_TAGS");
   const [content, setContent] = useState("");
+
+  const rendererRef = useRef<HTMLDivElement>(null);
 
   // 로컬 하이라이트 상태 (API 데이터 + 로컬 추가 데이터)
   const [localHighlights, setLocalHighlights] = useState<
@@ -62,16 +67,37 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
     }
   }, [noteData]);
 
+  // ⬇️ [추가] 500자 제한을 위한 텍스트 변경 핸들러
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (mode === "EDIT_TEXT") {
+      const val = e.target.value;
+      // 500자 초과 시 자름
+      setContent(val.length > 500 ? val.slice(0, 500) : val);
+    }
+  };
+
   // --- 핸들러: 텍스트 저장 ---
-  const handleSaveText = () => {
+  const handleSaveText = async () => {
     if (!noteData) return;
+
+    // 변경사항이 있을 때만 실행
     if (content !== noteData.content) {
-      updateMemoMutation.mutate(
-        { content, memo: noteData },
-        {
-          onSuccess: () => setMode("EDIT_TAGS"),
-        }
-      );
+      try {
+        // A. 텍스트 수정 API 호출
+        await updateMemoMutation.mutateAsync({ content, memo: noteData });
+
+        // B. (추가) 모든 태그 삭제 API 호출 (초기화)
+        await deleteAllTaggingsMutation.mutateAsync();
+
+        // C. 로컬 상태 초기화
+        setLocalHighlights([]);
+
+        alert("내용이 수정되었으며, 태그가 초기화되었습니다.");
+        setMode("EDIT_TAGS");
+      } catch (e) {
+        console.error(e);
+        alert("저장 중 오류가 발생했습니다.");
+      }
     } else {
       setMode("EDIT_TAGS");
     }
@@ -153,6 +179,12 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
     );
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (rendererRef.current) {
+      rendererRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
   // --- 시간 포맷팅 ---
   const { datePart, timePart, projectName } = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
@@ -192,7 +224,8 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
   const isMutating =
     updateMemoMutation.isPending ||
     createTaggingMutation.isPending ||
-    deleteTaggingMutation.isPending;
+    deleteTaggingMutation.isPending ||
+    deleteAllTaggingsMutation.isPending;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width={335}>
@@ -210,43 +243,49 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           <TabButton
             $active={mode === "EDIT_TEXT"}
             onClick={() => setMode("EDIT_TEXT")}
+            // 태그 모드일 때만 클릭 가능
+            disabled={mode === "EDIT_TEXT"}
           >
             글 수정
           </TabButton>
           <TabButton
             $active={mode === "EDIT_TAGS"}
-            onClick={() => setMode("EDIT_TAGS")}
+            onClick={() => mode !== "EDIT_TEXT" && setMode("EDIT_TAGS")}
+            disabled={mode === "EDIT_TEXT"}
           >
             태그 달기
           </TabButton>
         </TabContainer>
 
-        {mode === "EDIT_TAGS" && (
-          <TagButtons>
-            <TagButton
-              $active={activeCategory === "PROBLEM"}
-              onClick={() => editorActions.setActiveCategory("PROBLEM")}
-              color="#FFEC5E"
-            >
-              문제
-            </TagButton>
-            <TagButton
-              $active={activeCategory === "IDEA"}
-              onClick={() => editorActions.setActiveCategory("IDEA")}
-              color="#FF83CD"
-            >
-              아이디어
-            </TagButton>
-            <TagButton
-              $active={activeCategory === "SOLUTION"}
-              onClick={() => editorActions.setActiveCategory("SOLUTION")}
-              color="#89F3FF"
-            >
-              해결
-            </TagButton>
-          </TagButtons>
-        )}
-        {mode === "EDIT_TEXT" && <div style={{ height: "32px" }} />}
+        <ControlArea>
+          {mode === "EDIT_TAGS" ? (
+            <TagButtons>
+              <TagButton
+                $active={activeCategory === "PROBLEM"}
+                onClick={() => editorActions.setActiveCategory("PROBLEM")}
+                color="#FFEC5E"
+              >
+                문제
+              </TagButton>
+              <TagButton
+                $active={activeCategory === "IDEA"}
+                onClick={() => editorActions.setActiveCategory("IDEA")}
+                color="#FF83CD"
+              >
+                아이디어
+              </TagButton>
+              <TagButton
+                $active={activeCategory === "SOLUTION"}
+                onClick={() => editorActions.setActiveCategory("SOLUTION")}
+                color="#89F3FF"
+              >
+                해결
+              </TagButton>
+            </TagButtons>
+          ) : (
+            <WarningText>주의: 글을 수정하면 태깅값이 초기화됩니다</WarningText>
+          )}
+        </ControlArea>
 
         <EditorWrapper>
           {mode === "EDIT_TAGS" && (
@@ -254,32 +293,36 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
               content={content}
               highlights={localHighlights}
               onTagClick={removeTagByStart}
+              ref={rendererRef}
             />
           )}
           <NoteEditor
             value={content}
-            onChange={(e) => mode === "EDIT_TEXT" && setContent(e.target.value)}
+            onChange={handleContentChange} // ⬅️ [수정] 새 핸들러 연결
             onSelect={handleLocalCreateTag}
+            onScroll={handleScroll}
             spellCheck="false"
             disabled={isMutating}
             $isTagMode={mode === "EDIT_TAGS"}
-            // readOnly={mode === "EDIT_TAGS"} // readOnly를 쓰면 모바일에서 키보드가 안 뜸 (Good)
-            // 하지만 일부 브라우저에서 선택(드래그)도 막힐 수 있으므로 주의.
-            // 여기서는 onChange 제어로 처리함.
+            maxLength={500} // ⬅️ [추가] 500자 제한 속성
           />
+
+          {/* ⬇️ [추가] 글 수정 모드일 때만 글자수 표시 */}
+          {mode === "EDIT_TEXT" && (
+            <CharCount>{content.length} / 500</CharCount>
+          )}
         </EditorWrapper>
 
         <Footer>
           {mode === "EDIT_TEXT" ? (
             // 1. (수정) 글 수정 모드일 때: 취소 / 저장 버튼 (두 개로 나눔)
-            <>
-              <CancelButton onClick={() => setMode("EDIT_TAGS")}>
-                취소
-              </CancelButton>
-              <SubmitButton onClick={handleSaveText} disabled={isMutating}>
-                {updateMemoMutation.isPending ? "저장 중..." : "수정 완료"}
-              </SubmitButton>
-            </>
+            <SubmitButton
+              onClick={handleSaveText}
+              disabled={isMutating}
+              style={{ gridColumn: "1 / -1" }}
+            >
+              {updateMemoMutation.isPending ? "저장 중..." : "수정 완료"}
+            </SubmitButton>
           ) : (
             // 2. (수정) 태그 모드일 때: 닫기 버튼 (SubmitButton 하나만 꽉 차게 사용하거나, FullWidthButton 사용)
             // 여기서는 디자인 일관성을 위해 SubmitButton을 재활용하거나 FullWidthButton을 유지할 수 있습니다.
@@ -308,15 +351,14 @@ const categoryColors: Record<HighlightCategory, string> = {
   SOLUTION: "rgba(137, 243, 255, 0.7)",
 };
 
-const HighlightRenderer = ({
-  content,
-  highlights,
-  onTagClick,
-}: {
-  content: string;
-  highlights: (Highlight | Omit<Highlight, "id">)[];
-  onTagClick: (startIndex: number) => void;
-}) => {
+const HighlightRenderer = React.forwardRef<
+  HTMLDivElement,
+  {
+    content: string;
+    highlights: (Highlight | Omit<Highlight, "id">)[];
+    onTagClick: (startIndex: number) => void;
+  }
+>(({ content, highlights, onTagClick }, ref) => {
   const sortedHighlights = [...highlights].sort(
     (a, b) => a.startIndex - b.startIndex
   );
@@ -350,10 +392,28 @@ const HighlightRenderer = ({
     parts.push(<span key="text-end">{content.slice(lastIndex)}</span>);
   }
 
-  return <RendererContainer>{parts}</RendererContainer>;
-};
+  return <RendererContainer ref={ref}>{parts}</RendererContainer>; // ⬅️ return 닫기
+});
 
 // --- Styles ---
+
+const ControlArea = styled.div`
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  margin-bottom: 4px;
+`;
+
+const WarningText = styled.div`
+  font-size: 14px;
+  color: #969696;
+  font-weight: 500;
+  width: 100%;
+  text-align: center;
+  line-height: 1.3; /* 줄 높이 조정 */
+  padding: 2px 0; /* 위아래 약간의 패딩만 */
+`;
 
 const EditorWrapper = styled.div`
   position: relative;
@@ -365,6 +425,22 @@ const EditorWrapper = styled.div`
   overflow: hidden;
 `;
 
+const hideScrollbar = css`
+  overflow-y: auto; /* 스크롤 기능은 켜둠 */
+
+  /* 크롬, 사파리, 엣지: 스크롤바 영역을 아예 없앰 */
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0px;
+  }
+
+  /* 파이어폭스 */
+  scrollbar-width: none;
+
+  /* IE, 구형 엣지 */
+  -ms-overflow-style: none;
+`;
+
 const RendererContainer = styled.div`
   position: absolute;
   top: 0;
@@ -372,12 +448,23 @@ const RendererContainer = styled.div`
   z-index: 1;
   width: 100%;
   height: 100%;
+
+  /* 텍스트 스타일 완벽 일치 */
   padding: 12px;
   font-size: 18px;
   line-height: 1.5;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  letter-spacing: 0px;
   box-sizing: border-box;
+
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+
   pointer-events: none;
+
+  /* ⬇️ 여기에 적용! */
+  ${hideScrollbar}
 `;
 
 const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
@@ -386,16 +473,28 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   left: 0;
   width: 100%;
   height: 100%;
+
+  /* 텍스트 스타일 완벽 일치 */
   padding: 12px;
   font-size: 18px;
   line-height: 1.5;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  letter-spacing: 0px;
   box-sizing: border-box;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+
   resize: none;
   border: none;
   outline: none;
   background: transparent;
   color: transparent;
   caret-color: black;
+
+  /* ⬇️ 여기에 적용! */
+  ${hideScrollbar}
 
   ${({ $isTagMode }) =>
     $isTagMode &&
@@ -491,22 +590,6 @@ const CancelButton = styled.button`
   cursor: pointer;
 `;
 
-// const FullWidthButton = styled.button`
-//   width: 100%;
-//   height: 48px;
-//   border-radius: 12px;
-//   background-color: ${({ theme }) => theme.colors.primary};
-//   color: white;
-//   border: none;
-//   font-size: 16px;
-//   font-weight: bold;
-//   cursor: pointer;
-//   font-family: ${({ theme }) => theme.fonts.primary};
-//   &:disabled {
-//     opacity: 0.5;
-//   }
-// `;
-
 const SubmitButton = styled(CancelButton)`
   background: ${({ theme }) => theme.colors.primary};
   border: none;
@@ -537,4 +620,21 @@ const TabButton = styled.button<{ $active: boolean }>`
   border-bottom: 2px solid
     ${({ $active, theme }) => ($active ? theme.colors.primary : "transparent")};
   transition: all 0.2s;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+// ⬇️ [추가] 글자 수 카운터 스타일
+const CharCount = styled.div`
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 12px;
+  color: #999;
+  z-index: 3; /* 에디터보다 위에 보이게 */
+  pointer-events: none; /* 입력 방해하지 않게 */
+  font-family: ${({ theme }) => theme.fonts.primary};
 `;

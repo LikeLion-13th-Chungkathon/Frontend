@@ -28,7 +28,7 @@ export default function Layout() {
 }
 
 const Wrapper = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -39,7 +39,7 @@ const Wrapper = styled.div`
 const AppContainer = styled.main`
   width: 100%;
   max-width: ${({ theme }) => theme.layout.maxWidth};
-  min-height: 100vh;
+  /* min-height: 100vh; */
   background: ${({ theme }) => theme.colors.bodyBg};
   //box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   display: flex;
