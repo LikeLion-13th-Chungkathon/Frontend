@@ -138,7 +138,11 @@ const AddButton = styled.button`
 // (기능 2) 프로젝트 없을 때 UI
 // Empty State 스타일
 const EmptyWrapper = styled.div`
-  width: 100%;
+  /* width: 100%; */
+  width: 335px;
+  height: 115px;
+  flex-shrink: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -146,12 +150,13 @@ const EmptyWrapper = styled.div`
   gap: 16px;
   padding: 24px 16px;
   box-sizing: border-box;
-  min-height: 130px;
+  /* min-height: 130px; */
 
   background-color: #fff7ed;
   border: 2px solid #ca8853;
   border-radius: 12px;
-  margin: 12px 16px;
+  /* margin: 12px 16px; */
+  margin: 12px auto;
 `;
 
 const EmptyText = styled.div`
