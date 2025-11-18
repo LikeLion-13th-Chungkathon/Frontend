@@ -210,12 +210,15 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           <TabButton
             $active={mode === "EDIT_TEXT"}
             onClick={() => setMode("EDIT_TEXT")}
+            // 태그 모드일 때만 클릭 가능
+            disabled={mode === "EDIT_TEXT"}
           >
             글 수정
           </TabButton>
           <TabButton
             $active={mode === "EDIT_TAGS"}
-            onClick={() => setMode("EDIT_TAGS")}
+            onClick={() => mode !== "EDIT_TEXT" && setMode("EDIT_TAGS")}
+            disabled={mode === "EDIT_TEXT"}
           >
             태그 달기
           </TabButton>
@@ -246,7 +249,13 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
             </TagButton>
           </TagButtons>
         )}
-        {mode === "EDIT_TEXT" && <div style={{ height: "32px" }} />}
+        {mode === "EDIT_TEXT" && (
+          <WarningText>주의: 글을 수정하면 태깅이 초기화됩니다</WarningText>
+        )}
+        {/* 태그 모드일 때 높이 맞춤용 여백 (WarningText 높이만큼) */}
+        {mode === "EDIT_TAGS" && (
+          <div style={{ height: "20px", marginBottom: "8px" }} />
+        )}
 
         <EditorWrapper>
           {mode === "EDIT_TAGS" && (
@@ -272,14 +281,13 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
         <Footer>
           {mode === "EDIT_TEXT" ? (
             // 1. (수정) 글 수정 모드일 때: 취소 / 저장 버튼 (두 개로 나눔)
-            <>
-              <CancelButton onClick={() => setMode("EDIT_TAGS")}>
-                취소
-              </CancelButton>
-              <SubmitButton onClick={handleSaveText} disabled={isMutating}>
-                {updateMemoMutation.isPending ? "저장 중..." : "수정 완료"}
-              </SubmitButton>
-            </>
+            <SubmitButton
+              onClick={handleSaveText}
+              disabled={isMutating}
+              style={{ gridColumn: "1 / -1" }}
+            >
+              {updateMemoMutation.isPending ? "저장 중..." : "수정 완료"}
+            </SubmitButton>
           ) : (
             // 2. (수정) 태그 모드일 때: 닫기 버튼 (SubmitButton 하나만 꽉 차게 사용하거나, FullWidthButton 사용)
             // 여기서는 디자인 일관성을 위해 SubmitButton을 재활용하거나 FullWidthButton을 유지할 수 있습니다.
@@ -354,6 +362,15 @@ const HighlightRenderer = ({
 };
 
 // --- Styles ---
+
+const WarningText = styled.div`
+    font-size: 12px;
+    #969696;
+    text-align: center;
+    margin-bottom: 8px;
+    font-weight: 500;
+    height: 20px; // 높이 고정 (레이아웃 흔들림 방지)
+`;
 
 const EditorWrapper = styled.div`
   position: relative;
