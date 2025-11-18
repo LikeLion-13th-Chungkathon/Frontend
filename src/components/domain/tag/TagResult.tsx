@@ -91,10 +91,27 @@ const LogBox = styled.div`
 
     border-radius: 15px;
     border: 1px solid var(--main, #CA8853);
+
+    width: 100%;
+
+    /* 가로 스크롤 */
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    /* flex 아이템 줄바꿈 방지 */
+    flex-wrap: nowrap;
+
+    /* 스크롤바 숨기기 (선택) */
+    scrollbar-width: none; /* Firefox */
+    &::-webkit-scrollbar {
+        display: none; /* Chrome, Safari */
+    }
 `;
 
 const TagLogImg = styled.img`
     width: 55px;
     height: 51px;
     aspect-ratio: 55/51;
+
+    flex: 0 0 auto;
 `;
