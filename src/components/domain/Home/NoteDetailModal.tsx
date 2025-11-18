@@ -8,6 +8,7 @@ import {
   useDeleteTaggingMutation,
   useDeleteAllTaggingsMutation,
 } from "../../../lib/api/noteApi";
+import { useRef } from "react";
 import type {
   Highlight,
   HighlightCategory,
@@ -47,6 +48,8 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
 
   const [mode, setMode] = useState<TabMode>("EDIT_TAGS");
   const [content, setContent] = useState("");
+
+  const rendererRef = useRef<HTMLDivElement>(null);
 
   // 로컬 하이라이트 상태 (API 데이터 + 로컬 추가 데이터)
   const [localHighlights, setLocalHighlights] = useState<
@@ -176,6 +179,12 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
     );
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (rendererRef.current) {
+      rendererRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
+
   // --- 시간 포맷팅 ---
   const { datePart, timePart, projectName } = useMemo(() => {
     const dateToFormat = noteData ? new Date(noteData.updatedAt) : new Date();
@@ -284,12 +293,14 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
               content={content}
               highlights={localHighlights}
               onTagClick={removeTagByStart}
+              ref={rendererRef}
             />
           )}
           <NoteEditor
             value={content}
             onChange={handleContentChange} // ⬅️ [수정] 새 핸들러 연결
             onSelect={handleLocalCreateTag}
+            onScroll={handleScroll}
             spellCheck="false"
             disabled={isMutating}
             $isTagMode={mode === "EDIT_TAGS"}
@@ -340,15 +351,14 @@ const categoryColors: Record<HighlightCategory, string> = {
   SOLUTION: "rgba(137, 243, 255, 0.7)",
 };
 
-const HighlightRenderer = ({
-  content,
-  highlights,
-  onTagClick,
-}: {
-  content: string;
-  highlights: (Highlight | Omit<Highlight, "id">)[];
-  onTagClick: (startIndex: number) => void;
-}) => {
+const HighlightRenderer = React.forwardRef<
+  HTMLDivElement,
+  {
+    content: string;
+    highlights: (Highlight | Omit<Highlight, "id">)[];
+    onTagClick: (startIndex: number) => void;
+  }
+>(({ content, highlights, onTagClick }, ref) => {
   const sortedHighlights = [...highlights].sort(
     (a, b) => a.startIndex - b.startIndex
   );
@@ -382,8 +392,8 @@ const HighlightRenderer = ({
     parts.push(<span key="text-end">{content.slice(lastIndex)}</span>);
   }
 
-  return <RendererContainer>{parts}</RendererContainer>;
-};
+  return <RendererContainer ref={ref}>{parts}</RendererContainer>; // ⬅️ return 닫기
+});
 
 // --- Styles ---
 
@@ -428,6 +438,16 @@ const RendererContainer = styled.div`
   box-sizing: border-box;
   white-space: pre-wrap;
   pointer-events: none;
+
+  /* 7. [수정] 스크롤 가능하게 변경하되, 스크롤바는 숨김 */
+  overflow-y: auto;
+
+  /* 스크롤바 숨기기 (크롬, 사파리) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* 파이어폭스 */
+  scrollbar-width: none;
 `;
 
 const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
@@ -449,6 +469,8 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   background: transparent;
   color: transparent;
   caret-color: black;
+
+  overflow-y: auto;
 
   ${({ $isTagMode }) =>
     $isTagMode &&
