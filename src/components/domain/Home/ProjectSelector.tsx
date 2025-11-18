@@ -14,6 +14,16 @@ const ProjectSelector = () => {
   // React Query로 프로젝트 목록 가져오기
   const { data: projects, isLoading } = useProjectsQuery();
 
+  //Zustand 활성 프로젝트 ID
+  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
+  const { setActiveProjectId } = useCalendarActions();
+
+  useEffect(() => {
+    if (!isLoading && projects && projects.length > 0 && !activeProjectId) {
+      setActiveProjectId(projects[0].id);
+    }
+  }, [isLoading, projects, activeProjectId, setActiveProjectId]);
+
   if (!isLoading && (!projects || projects.length === 0)) {
     return (
       <EmptyWrapper>
@@ -34,16 +44,6 @@ const ProjectSelector = () => {
   if (isLoading) {
     return <Wrapper>프로젝트 로딩 중...</Wrapper>;
   }
-
-  //Zustand 활성 프로젝트 ID
-  const activeProjectId = useCalendarStore((state) => state.activeProjectId);
-  const { setActiveProjectId } = useCalendarActions();
-
-  useEffect(() => {
-    if (!isLoading && projects && projects.length > 0 && !activeProjectId) {
-      setActiveProjectId(projects[0].id);
-    }
-  }, [isLoading, projects, activeProjectId, setActiveProjectId]);
 
   return (
     <Wrapper>
