@@ -446,20 +446,20 @@ const RendererContainer = styled.div`
   overflow-y: scroll;
 
   pointer-events: none;
+  font-family: ${({ theme }) => theme.fonts.primary};
 
-  /* (선택) 스크롤바 자체는 안 보이게 숨김 (공간만 차지하게) */
+  /* ⬇️ ⬇️ [수정] 줄바꿈 규칙 통일 ⬇️ ⬇️ */
+  white-space: pre-wrap; /* 공백과 줄바꿈 유지, 필요시 자동 줄바꿈 */
+  word-break: break-word; /* 단어 단위로 줄바꿈 (break-all 대신 권장) */
+  overflow-wrap: break-word; /* (최신 표준) */
+  /* ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ */
+
   &::-webkit-scrollbar {
-    width: 16px; /* textarea 스크롤바 너비와 비슷하게 */
-    background: transparent;
+    display: none;
   }
-  &::-webkit-scrollbar-thumb {
-    background: transparent;
-  }
-
-  /* 파이어폭스 */
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
 `;
+
 const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   position: absolute;
   top: 0;
@@ -479,12 +479,13 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   background: transparent;
   color: transparent;
   caret-color: black;
+  font-family: ${({ theme }) => theme.fonts.primary};
 
-  /* ⬇️ 중요: 줄바꿈 방식 일치 */
+  /* ⬇️ ⬇️ [수정] 줄바꿈 규칙 통일 ⬇️ ⬇️ */
   white-space: pre-wrap;
-  word-break: break-all;
-  /* ⬇️ 중요: 항상 스크롤바 표시 (공간 확보) */
-  overflow-y: scroll;
+  word-break: break-word; /* break-all -> break-word로 변경 */
+  overflow-wrap: break-word;
+  /* ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ ⬆️ */
 
   ${({ $isTagMode }) =>
     $isTagMode &&
