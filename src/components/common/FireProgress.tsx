@@ -70,9 +70,14 @@ const Container = styled.div<{ $size: FireProgressSize }>`
 `;
 
 const Bar = styled.div<{ $size: FireProgressSize }>`
+    /* position: absolute;
+    top: 50%;
+    transform: translateY(-50%); */
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    left: 50%;                /* 가운데 기준 */
+    transform: translate(-50%, -50%);
+    
     border-style: solid;
     border-color: #ca8853;
     border-radius: 20px;
