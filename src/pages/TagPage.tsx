@@ -276,12 +276,17 @@ const CountContainer = styled.div`
 `;
 
 const CountBox = styled.div`
-  width: 46px;
-  height: 23px;
+  /* width: 46px; */
+  /* height: 23px; */
   flex-shrink: 0;
   border-radius: 11.5px;
   border: 1px solid var(--main, #ca8853);
   background: #fff;
+
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
 `;
 
 const LogHouseImg = styled.img`
@@ -308,7 +313,7 @@ const CountTextBox = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 
   color: #684f3c;
   text-align: center;
@@ -316,7 +321,9 @@ const CountTextBox = styled.div`
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
-  line-height: normal;
+  /* line-height: normal; */
+
+  line-height: 1;
 `;
 
 const EmptyHouseSpace = styled.div`
