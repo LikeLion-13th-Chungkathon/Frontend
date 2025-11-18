@@ -439,17 +439,27 @@ const RendererContainer = styled.div`
   white-space: pre-wrap;
   pointer-events: none;
 
-  /* 7. [수정] 스크롤 가능하게 변경하되, 스크롤바는 숨김 */
-  overflow-y: auto;
+  /* ⬇️ 중요: 패딩 설정 */
+  padding: 12px;
 
-  /* 스크롤바 숨기기 (크롬, 사파리) */
+  /* ⬇️ 중요: 스크롤바 공간 확보를 위해 항상 스크롤바 표시 (내용 없어도) */
+  overflow-y: scroll;
+
+  pointer-events: none;
+
+  /* (선택) 스크롤바 자체는 안 보이게 숨김 (공간만 차지하게) */
   &::-webkit-scrollbar {
-    display: none;
+    width: 16px; /* textarea 스크롤바 너비와 비슷하게 */
+    background: transparent;
   }
-  /* 파이어폭스 */
-  scrollbar-width: none;
-`;
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
 
+  /* 파이어폭스 */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+`;
 const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   position: absolute;
   top: 0;
@@ -457,8 +467,8 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   width: 100%;
   height: 100%;
 
-  /* ⬇️ [수정] 하단 패딩을 늘려 카운터 공간 확보 */
-  padding: 12px 12px 24px 12px;
+  /* ⬇️ 중요: 렌더러와 동일한 패딩 */
+  padding: 12px;
 
   font-size: 18px;
   line-height: 1.5;
@@ -470,7 +480,11 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   color: transparent;
   caret-color: black;
 
-  overflow-y: auto;
+  /* ⬇️ 중요: 줄바꿈 방식 일치 */
+  white-space: pre-wrap;
+  word-break: break-all;
+  /* ⬇️ 중요: 항상 스크롤바 표시 (공간 확보) */
+  overflow-y: scroll;
 
   ${({ $isTagMode }) =>
     $isTagMode &&
