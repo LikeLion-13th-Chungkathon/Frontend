@@ -64,6 +64,15 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
     }
   }, [noteData]);
 
+  // ⬇️ [추가] 500자 제한을 위한 텍스트 변경 핸들러
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (mode === "EDIT_TEXT") {
+      const val = e.target.value;
+      // 500자 초과 시 자름
+      setContent(val.length > 500 ? val.slice(0, 500) : val);
+    }
+  };
+
   // --- 핸들러: 텍스트 저장 ---
   const handleSaveText = async () => {
     if (!noteData) return;
@@ -279,15 +288,18 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
           )}
           <NoteEditor
             value={content}
-            onChange={(e) => mode === "EDIT_TEXT" && setContent(e.target.value)}
+            onChange={handleContentChange} // ⬅️ [수정] 새 핸들러 연결
             onSelect={handleLocalCreateTag}
             spellCheck="false"
             disabled={isMutating}
             $isTagMode={mode === "EDIT_TAGS"}
-            // readOnly={mode === "EDIT_TAGS"} // readOnly를 쓰면 모바일에서 키보드가 안 뜸 (Good)
-            // 하지만 일부 브라우저에서 선택(드래그)도 막힐 수 있으므로 주의.
-            // 여기서는 onChange 제어로 처리함.
+            maxLength={500} // ⬅️ [추가] 500자 제한 속성
           />
+
+          {/* ⬇️ [추가] 글 수정 모드일 때만 글자수 표시 */}
+          {mode === "EDIT_TEXT" && (
+            <CharCount>{content.length} / 500</CharCount>
+          )}
         </EditorWrapper>
 
         <Footer>
@@ -424,7 +436,10 @@ const NoteEditor = styled.textarea<{ $isTagMode?: boolean }>`
   left: 0;
   width: 100%;
   height: 100%;
-  padding: 12px;
+
+  /* ⬇️ [수정] 하단 패딩을 늘려 카운터 공간 확보 */
+  padding: 12px 12px 24px 12px;
+
   font-size: 18px;
   line-height: 1.5;
   box-sizing: border-box;
@@ -564,4 +579,16 @@ const TabButton = styled.button<{ $active: boolean }>`
     cursor: not-allowed;
     opacity: 0.5;
   }
+`;
+
+// ⬇️ [추가] 글자 수 카운터 스타일
+const CharCount = styled.div`
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 12px;
+  color: #999;
+  z-index: 3; /* 에디터보다 위에 보이게 */
+  pointer-events: none; /* 입력 방해하지 않게 */
+  font-family: ${({ theme }) => theme.fonts.primary};
 `;
