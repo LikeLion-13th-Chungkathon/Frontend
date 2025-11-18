@@ -265,7 +265,7 @@ const NoteDetailModal = ({ noteId, onClose, isOpen }: NoteDetailModalProps) => {
               </TagButton>
             </TagButtons>
           ) : (
-            <WarningText>주의: 글을 수정하면 태깅이 초기화됩니다</WarningText>
+            <WarningText>주의: 글을 수정하면 태깅값이 초기화됩니다</WarningText>
           )}
         </ControlArea>
 
@@ -376,20 +376,21 @@ const HighlightRenderer = ({
 // --- Styles ---
 
 const ControlArea = styled.div`
-  height: 40px; /* 태그 버튼 높이(32px) + 여백 고려해서 고정 */
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: flex-start; /* 왼쪽 정렬 */
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 `;
 
 const WarningText = styled.div`
-  font-size: 12px;
+  font-size: 14px;
   color: #969696;
   font-weight: 500;
-  /* 주의 문구 중앙 정렬이 필요하면 width 100% + text-align center */
   width: 100%;
   text-align: center;
+  line-height: 1.3; /* 줄 높이 조정 */
+  padding: 2px 0; /* 위아래 약간의 패딩만 */
 `;
 
 const EditorWrapper = styled.div`
@@ -527,22 +528,6 @@ const CancelButton = styled.button`
   font-weight: 500;
   cursor: pointer;
 `;
-
-// const FullWidthButton = styled.button`
-//   width: 100%;
-//   height: 48px;
-//   border-radius: 12px;
-//   background-color: ${({ theme }) => theme.colors.primary};
-//   color: white;
-//   border: none;
-//   font-size: 16px;
-//   font-weight: bold;
-//   cursor: pointer;
-//   font-family: ${({ theme }) => theme.fonts.primary};
-//   &:disabled {
-//     opacity: 0.5;
-//   }
-// `;
 
 const SubmitButton = styled(CancelButton)`
   background: ${({ theme }) => theme.colors.primary};
